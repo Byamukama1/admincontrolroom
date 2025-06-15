@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBlinks - Referrals Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #ffca2c;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border-radius: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Search and Filter */
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        /* Summary Cards */
+        .summary-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        .total {
+            color: var(--primary);
+        }
+
+        .starter {
+            color: #6c757d;
+        }
+
+        .basic {
+            color: #4361ee;
+        }
+
+        .standard {
+            color: #28a745;
+        }
+
+        .professional {
+            color: #8b5cf6;
+        }
+
+        /* Referrals Table */
+        .referrals-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .referrals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .referrals-table th {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+        }
+
+        .referrals-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .referrals-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .referee-list {
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        .referee-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .referee-item:last-child {
+            border-bottom: none;
+        }
+
+        .referee-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .referee-package {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: #f0f7ff;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .package-starter {
+            background: #f1f5f9;
+            color: #6c757d;
+        }
+
+        .package-basic {
+            background: #eef2ff;
+            color: #4361ee;
+        }
+
+        .package-standard {
+            background: #f0fdf4;
+            color: #28a745;
+        }
+
+        .package-professional {
+            background: #f5f3ff;
+            color: #8b5cf6;
+        }
+
+        .referrer-package {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-view {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-view:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--secondary);
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Referral Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 18px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .referral-detail {
+            margin-bottom: 20px;
+        }
+        
+        .referral-detail h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .referral-detail p {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        .referee-list-modal {
+            margin-top: 20px;
+        }
+        
+        .referee-item-modal {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+        }
+        
+        .referee-info-modal {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .referee-date {
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .referrals-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .summary-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Referral Detail Modal -->
+    <div class="modal" id="referral-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Referral Details</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div class="referral-detail">
+                    <h4><i class="fab fa-whatsapp"></i> Referrer WhatsApp</h4>
+                    <p id="modal-referrer-whatsapp">-</p>
+                </div>
+                
+                <div class="referral-detail">
+                    <h4><i class="fas fa-box"></i> Referrer Package</h4>
+                    <p id="modal-referrer-package">-</p>
+                </div>
+                
+                <div class="referral-detail">
+                    <h4><i class="fas fa-calendar-alt"></i> First Referral Date</h4>
+                    <p id="modal-first-date">-</p>
+                </div>
+                
+                <div class="referral-detail">
+                    <h4><i class="fas fa-users"></i> Total Referrals</h4>
+                    <p id="modal-total-referrals">-</p>
+                </div>
+                
+                <h4 style="margin-top: 20px;"><i class="fas fa-user-friends"></i> Referees</h4>
+                <div class="referee-list-modal" id="referee-list-modal">
+                    <!-- Referees will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>OBlinks Referrals Management</span>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <span>Admin</span>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <i class="fab fa-whatsapp"></i>
+                <input type="text" id="search-input" placeholder="Search by WhatsApp number...">
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-container">
+            <div class="summary-card">
+                <div class="summary-number total" id="total-referrals">0</div>
+                <div class="summary-label">Total Referrals</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number starter" id="starter-referrals">0</div>
+                <div class="summary-label">Starter Referrals</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number basic" id="basic-referrals">0</div>
+                <div class="summary-label">Basic Referrals</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number standard" id="standard-referrals">0</div>
+                <div class="summary-label">Standard Referrals</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number professional" id="professional-referrals">0</div>
+                <div class="summary-label">Professional Referrals</div>
+            </div>
+        </div>
+
+        <!-- Referrals Table -->
+        <div class="referrals-table-container">
+            <table class="referrals-table">
+                <thead>
+                    <tr>
+                        <th>Referrer WhatsApp</th>
+                        <th>Referees</th>
+                        <th>First Referral Date</th>
+                        <th>Referrer Package</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="referrals-table-body">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading referrals...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+  <!-- Bottom Navigation -->
+<div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+        <i class="fas fa-building"></i>
+        <span>Businesses</span>
+    </a> 
+    <a href="payments.html" class="nav-item">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>Payments</span>
+    </a>
+    <a href="referrals.html" class="nav-item active">
+        <i class="fas fa-users"></i>
+        <span>Referrals</span>
+    </a>
+    <a href="settings.html" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>more</span>
+    </a>
+</div>
+    <script>
+        // Firebase configuration - Using your provided credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+            authDomain: "oblinks-7fdb1.firebaseapp.com",
+            projectId: "oblinks-7fdb1",
+            storageBucket: "oblinks-7fdb1.appspot.com",
+            messagingSenderId: "587017639779",
+            appId: "1:587017639779:web:d11b60f40f431cfc202556"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const searchInput = document.getElementById('search-input');
+        const referralsTableBody = document.getElementById('referrals-table-body');
+        
+        // Summary elements
+        const totalReferrals = document.getElementById('total-referrals');
+        const starterReferrals = document.getElementById('starter-referrals');
+        const basicReferrals = document.getElementById('basic-referrals');
+        const standardReferrals = document.getElementById('standard-referrals');
+        const professionalReferrals = document.getElementById('professional-referrals');
+        
+        // Modal elements
+        const referralModal = document.getElementById('referral-modal');
+        const modalReferrerWhatsapp = document.getElementById('modal-referrer-whatsapp');
+        const modalReferrerPackage = document.getElementById('modal-referrer-package');
+        const modalFirstDate = document.getElementById('modal-first-date');
+        const modalTotalReferrals = document.getElementById('modal-total-referrals');
+        const refereeListModal = document.getElementById('referee-list-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // App State
+        let allReferrals = [];
+        let currentSearch = '';
+        
+        // Set loading state
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+        }
+        
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Get package class
+        function getPackageClass(packageName) {
+            if (!packageName) return '';
+            packageName = packageName.toLowerCase();
+            
+            if (packageName.includes('starter')) return 'package-starter';
+            if (packageName.includes('basic')) return 'package-basic';
+            if (packageName.includes('standard')) return 'package-standard';
+            if (packageName.includes('professional')) return 'package-professional';
+            return '';
+        }
+        
+        // Load referrals from Firestore
+        function loadReferrals() {
+            setLoading(true);
+            
+            db.collection("referrals")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then(querySnapshot => {
+                    allReferrals = [];
+                    querySnapshot.forEach(doc => {
+                        const referral = {
+                            id: doc.id,
+                            ...doc.data(),
+                            timestamp: doc.data().timestamp
+                        };
+                        allReferrals.push(referral);
+                    });
+                    
+                    renderReferrals();
+                    updateSummary();
+                    setLoading(false);
+                })
+                .catch(error => {
+                    console.error("Error getting referrals: ", error);
+                    referralsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px; color: var(--danger);">
+                                <i class="fas fa-exclamation-circle"></i> Failed to load referrals: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                    setLoading(false);
+                });
+        }
+        
+        // Render referrals to the table
+        function renderReferrals() {
+            // Group referrals by referrerWhatsapp
+            const referralsByReferrer = {};
+            
+            allReferrals.forEach(ref => {
+                const referrerKey = ref.referrerWhatsapp;
+                
+                if (!referralsByReferrer[referrerKey]) {
+                    referralsByReferrer[referrerKey] = {
+                        referrerWhatsapp: ref.referrerWhatsapp,
+                        referrerPackage: ref.referrerPackage,
+                        referees: [],
+                        firstDate: ref.timestamp
+                    };
+                }
+                
+                // Add referee
+                referralsByReferrer[referrerKey].referees.push({
+                    whatsapp: ref.refereeWhatsapp,
+                    package: ref.refereePackage,
+                    date: ref.timestamp
+                });
+                
+                // Update first date if earlier
+                if (ref.timestamp < referralsByReferrer[referrerKey].firstDate) {
+                    referralsByReferrer[referrerKey].firstDate = ref.timestamp;
+                }
+            });
+            
+            // Convert to array and sort by firstDate
+            const groupedReferrals = Object.values(referralsByReferrer);
+            groupedReferrals.sort((a, b) => b.firstDate - a.firstDate);
+            
+            let tableHTML = '';
+            
+            // Filter based on search
+            const filteredReferrals = groupedReferrals.filter(ref => {
+                if (!currentSearch) return true;
+                
+                const searchLower = currentSearch.toLowerCase();
+                const matchesReferrer = ref.referrerWhatsapp?.toLowerCase().includes(searchLower) || false;
+                
+                // Check if any referee matches
+                const matchesReferee = ref.referees.some(r => 
+                    r.whatsapp?.toLowerCase().includes(searchLower)
+                );
+                
+                return matchesReferrer || matchesReferee;
+            });
+            
+            if (filteredReferrals.length === 0) {
+                tableHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-users"></i> No referrals found
+                        </td>
+                    </tr>
+                `;
+            } else {
+                filteredReferrals.forEach(ref => {
+                    const packageClass = getPackageClass(ref.referrerPackage);
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${ref.referrerWhatsapp || 'N/A'}</td>
+                            <td>
+                                <div class="referee-list">
+                                    ${ref.referees.map(r => `
+                                        <div class="referee-item">
+                                            <div class="referee-info">
+                                                <strong>${r.whatsapp || 'N/A'}</strong>
+                                                <div class="referee-date">${formatDate(r.date) || 'N/A'}</div>
+                                            </div>
+                                            <span class="referee-package ${getPackageClass(r.package)}">
+                                                ${r.package || 'N/A'}
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </td>
+                            <td>${formatDate(ref.firstDate) || 'N/A'}</td>
+                            <td>
+                                <span class="referrer-package ${packageClass}">
+                                    ${ref.referrerPackage || 'N/A'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-view" onclick="viewReferralDetails('${ref.referrerWhatsapp}')">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            referralsTableBody.innerHTML = tableHTML;
+        }
+        
+        // View referral details
+        function viewReferralDetails(referrerWhatsapp) {
+            // Find all referrals for this referrer
+            const referralsForReferrer = allReferrals.filter(
+                r => r.referrerWhatsapp === referrerWhatsapp
+            );
+            
+            if (referralsForReferrer.length === 0) return;
+            
+            // Find the first referral date
+            const firstDate = referralsForReferrer.reduce((min, r) => 
+                r.timestamp < min ? r.timestamp : min, 
+                referralsForReferrer[0].timestamp
+            );
+            
+            modalReferrerWhatsapp.textContent = referrerWhatsapp || 'N/A';
+            modalReferrerPackage.textContent = referralsForReferrer[0].referrerPackage || 'N/A';
+            modalFirstDate.textContent = formatDate(firstDate) || 'N/A';
+            modalTotalReferrals.textContent = referralsForReferrer.length;
+            
+            // Build referee list for modal
+            refereeListModal.innerHTML = referralsForReferrer.map(r => `
+                <div class="referee-item-modal">
+                    <div class="referee-info-modal">
+                        <strong>${r.refereeWhatsapp || 'N/A'}</strong>
+                        <div class="referee-date">${formatDate(r.timestamp) || 'N/A'}</div>
+                    </div>
+                    <span class="referee-package ${getPackageClass(r.refereePackage)}">
+                        ${r.refereePackage || 'N/A'}
+                    </span>
+                </div>
+            `).join('');
+            
+            // Show modal
+            referralModal.style.display = 'flex';
+        }
+        
+        // Update summary cards
+        function updateSummary() {
+            totalReferrals.textContent = allReferrals.length;
+            
+            starterReferrals.textContent = allReferrals.filter(r => 
+                r.refereePackage && r.refereePackage.toLowerCase().includes('starter')
+            ).length;
+            
+            basicReferrals.textContent = allReferrals.filter(r => 
+                r.refereePackage && r.refereePackage.toLowerCase().includes('basic')
+            ).length;
+            
+            standardReferrals.textContent = allReferrals.filter(r => 
+                r.refereePackage && r.refereePackage.toLowerCase().includes('standard')
+            ).length;
+            
+            professionalReferrals.textContent = allReferrals.filter(r => 
+                r.refereePackage && r.refereePackage.toLowerCase().includes('professional')
+            ).length;
+        }
+        
+        // Initialize the referrals dashboard
+        function initReferralsDashboard() {
+            // Load referrals
+            loadReferrals();
+            
+            // Setup search
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase();
+                renderReferrals();
+            });
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                referralModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === referralModal) {
+                    referralModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initReferralsDashboard);
+        
+        firebase.auth().onAuthStateChanged(user => {
+  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+    window.location.href = "login.html";
+  }
+});
+    </script>
+</body>
+</html>

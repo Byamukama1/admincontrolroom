@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBlinks - Payments Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #ffca2c;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border-radius: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Search and Filter */
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: #e9ecef;
+            color: var(--dark);
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Summary Cards */
+        .summary-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        .approved {
+            color: var(--success);
+        }
+
+        .pending {
+            color: var(--warning);
+        }
+
+        .rejected {
+            color: var(--danger);
+        }
+
+        .total {
+            color: var(--primary);
+        }
+
+        .withdrawn {
+            color: #8b5cf6;
+        }
+
+        /* Payments Table */
+        .payments-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .payments-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .payments-table th {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+        }
+
+        .payments-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .payments-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .payments-table .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: rgba(255, 202, 44, 0.1);
+            color: #b45309;
+        }
+
+        .status-approved {
+            background: rgba(40, 167, 69, 0.1);
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: rgba(220, 53, 69, 0.1);
+            color: #b91c1c;
+        }
+
+        .status-withdrawal {
+            background: rgba(139, 92, 246, 0.1);
+            color: #5b21b6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-approve {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+        }
+
+        .btn-approve:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-reject {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-reject:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-view {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-view:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--secondary);
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Payment Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 18px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .payment-detail {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .payment-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .payment-value {
+            text-align: right;
+        }
+        
+        .modal-footer {
+            padding: 18px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .amount {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .payments-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .summary-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .filter-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .filter-btn {
+                flex: 1;
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Payment Detail Modal -->
+    <div class="modal" id="payment-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Payment Details</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div class="payment-detail">
+                    <div class="payment-label">Business:</div>
+                    <div class="payment-value" id="modal-business">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">WhatsApp:</div>
+                    <div class="payment-value" id="modal-whatsapp">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Payment Phone:</div>
+                    <div class="payment-value" id="modal-payment-phone">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Type:</div>
+                    <div class="payment-value" id="modal-type">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Status:</div>
+                    <div class="payment-value" id="modal-status">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Amount:</div>
+                    <div class="payment-value">
+                        <span class="amount" id="modal-amount">-</span> UGX
+                    </div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Date:</div>
+                    <div class="payment-value" id="modal-date">-</div>
+                </div>
+                <div class="payment-detail">
+                    <div class="payment-label">Package:</div>
+                    <div class="payment-value" id="modal-package">-</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn btn-approve" id="modal-approve-btn">
+                    <i class="fas fa-check"></i> Approve Payment
+                </button>
+                <button class="action-btn btn-reject" id="modal-reject-btn">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>OBlinks Payments Management</span>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <span>Admin</span>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-section">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search by WhatsApp, payment phone, business...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Payments</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+                <button class="filter-btn" data-filter="approved">Approved</button>
+                <button class="filter-btn" data-filter="withdrawal">Withdrawals</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-container">
+            <div class="summary-card">
+                <div class="summary-number total" id="total-payments">0</div>
+                <div class="summary-label">Total Payments</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number pending" id="pending-payments">0</div>
+                <div class="summary-label">Pending Payments</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number withdrawn" id="total-withdrawn">0</div>
+                <div class="summary-label">Total Withdrawn</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number pending" id="pending-withdrawals">0</div>
+                <div class="summary-label">Pending Withdrawals</div>
+            </div>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="payments-table-container">
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>WhatsApp</th>
+                        <th>Payment Phone</th>
+                        <th>Amount</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="payments-table-body">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading payments...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'">
+        <i class="fas fa-building"></i>
+        <span>Businesses</span>
+    </div> 
+    <div class="nav-item" onclick="window.location.href='payments.html'">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>Payments</span>
+    </div>
+    <div class="nav-item active" onclick="window.location.href='referrals.html'">
+        <i class="fas fa-users"></i>
+        <span>Referrals</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='settings.html'">
+        <i class="fas fa-cog"></i>
+        <span>more</span>
+    </div>
+</div>
+    <script>
+        // Firebase configuration - Using your provided credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+            authDomain: "oblinks-7fdb1.firebaseapp.com",
+            projectId: "oblinks-7fdb1",
+            storageBucket: "oblinks-7fdb1.appspot.com",
+            messagingSenderId: "587017639779",
+            appId: "1:587017639779:web:d11b60f40f431cfc202556"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const searchInput = document.getElementById('search-input');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const paymentsTableBody = document.getElementById('payments-table-body');
+        
+        // Summary elements
+        const totalPayments = document.getElementById('total-payments');
+        const pendingPayments = document.getElementById('pending-payments');
+        const totalWithdrawn = document.getElementById('total-withdrawn');
+        const pendingWithdrawals = document.getElementById('pending-withdrawals');
+        
+        // Modal elements
+        const paymentModal = document.getElementById('payment-modal');
+        const modalBusiness = document.getElementById('modal-business');
+        const modalWhatsapp = document.getElementById('modal-whatsapp');
+        const modalPaymentPhone = document.getElementById('modal-payment-phone');
+        const modalType = document.getElementById('modal-type');
+        const modalStatus = document.getElementById('modal-status');
+        const modalAmount = document.getElementById('modal-amount');
+        const modalDate = document.getElementById('modal-date');
+        const modalPackage = document.getElementById('modal-package');
+        const modalApproveBtn = document.getElementById('modal-approve-btn');
+        const modalRejectBtn = document.getElementById('modal-reject-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // App State
+        let allPayments = [];
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentPaymentId = null;
+        
+        // Set loading state
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+        }
+        
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-UG', {
+                style: 'currency',
+                currency: 'UGX'
+            }).format(amount);
+        }
+        
+        // Load payments from Firestore
+        function loadPayments() {
+            setLoading(true);
+            
+            db.collection("payments")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then(querySnapshot => {
+                    allPayments = [];
+                    querySnapshot.forEach(doc => {
+                        const payment = {
+                            id: doc.id,
+                            ...doc.data(),
+                            timestamp: doc.data().timestamp
+                        };
+                        allPayments.push(payment);
+                    });
+                    
+                    renderPayments();
+                    updateSummary();
+                    setLoading(false);
+                })
+                .catch(error => {
+                    console.error("Error getting payments: ", error);
+                    paymentsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
+                                <i class="fas fa-exclamation-circle"></i> Failed to load payments: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                    setLoading(false);
+                });
+        }
+        
+        // Render payments to the table
+        function renderPayments() {
+            let tableHTML = '';
+            
+            // Filter payments based on current filter and search
+            const filteredPayments = allPayments.filter(payment => {
+                // Apply filter
+                if (currentFilter === 'pending' && payment.status !== 'pending') {
+                    return false;
+                }
+                if (currentFilter === 'approved' && payment.status !== 'approved') {
+                    return false;
+                }
+                if (currentFilter === 'withdrawal' && payment.type !== 'withdrawal') {
+                    return false;
+                }
+                
+                // Apply search
+                if (currentSearch) {
+                    const searchLower = currentSearch.toLowerCase();
+                    const matchesWhatsapp = payment.whatsapp?.toLowerCase().includes(searchLower) || false;
+                    const matchesPhone = payment.paymentPhone?.toLowerCase().includes(searchLower) || false;
+                    const matchesBusiness = payment.businessName?.toLowerCase().includes(searchLower) || false;
+                    
+                    if (!(matchesWhatsapp || matchesPhone || matchesBusiness)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            if (filteredPayments.length === 0) {
+                tableHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-money-bill-wave"></i> No payments found
+                        </td>
+                    </tr>
+                `;
+            } else {
+                filteredPayments.forEach(payment => {
+                    const statusClass = payment.status === 'approved' ? 'status-approved' : 
+                                      payment.status === 'rejected' ? 'status-rejected' : 
+                                      payment.type === 'withdrawal' ? 'status-withdrawal' : 'status-pending';
+                                      
+                    const statusText = payment.type === 'withdrawal' ? 'Withdrawal' : 
+                                     payment.status === 'approved' ? 'Approved' : 
+                                     payment.status === 'rejected' ? 'Rejected' : 'Pending';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${payment.type === 'withdrawal' ? 'Withdrawal' : 'Package Payment'}</td>
+                            <td>${payment.whatsapp || 'N/A'}</td>
+                            <td>${payment.paymentPhone || 'N/A'}</td>
+                            <td>${formatCurrency(payment.amount || 0)}</td>
+                            <td>${formatDate(payment.timestamp) || 'N/A'}</td>
+                            <td>
+                                <span class="status ${statusClass}">
+                                    ${statusText}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-view" onclick="viewPayment('${payment.id}')">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                    ${payment.status === 'pending' && payment.type !== 'withdrawal' ? `
+                                    <button class="action-btn btn-approve" onclick="approvePayment('${payment.id}')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            paymentsTableBody.innerHTML = tableHTML;
+        }
+        
+        function rejectPayment(paymentId) {
+    setLoading(true);
+
+    db.collection("payments").doc(paymentId).update({
+        status: "rejected"
+    })
+    .then(() => {
+        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+        if (paymentIndex !== -1) {
+            allPayments[paymentIndex].status = "rejected";
+        }
+
+        renderPayments();
+        updateSummary();
+        setLoading(false);
+        paymentModal.style.display = 'none';
+        alert("❌ Payment has been rejected.");
+    })
+    .catch(error => {
+        console.error("Error rejecting payment:", error);
+        alert("Failed to reject payment: " + error.message);
+        setLoading(false);
+    });
+}
+        // Update summary cards
+        function updateSummary() {
+            // Total payments (approved)
+            const approvedPayments = allPayments.filter(p => 
+                p.status === 'approved' && p.type !== 'withdrawal'
+            );
+            const totalApprovedAmount = approvedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            totalPayments.textContent = formatCurrency(totalApprovedAmount);
+            
+            // Pending payments (not withdrawals)
+            const pendingPaymentsCount = allPayments.filter(p => 
+                p.status === 'pending' && p.type !== 'withdrawal'
+            ).length;
+            pendingPayments.textContent = pendingPaymentsCount;
+            
+            // Total withdrawn (approved withdrawals)
+            const approvedWithdrawals = allPayments.filter(p => 
+                p.status === 'approved' && p.type === 'withdrawal'
+            );
+            const totalWithdrawnAmount = approvedWithdrawals.reduce((sum, p) => sum + (p.amount || 0), 0);
+            totalWithdrawn.textContent = formatCurrency(totalWithdrawnAmount);
+            
+            // Pending withdrawals
+            const pendingWithdrawalsCount = allPayments.filter(p => 
+                p.status === 'pending' && p.type === 'withdrawal'
+            ).length;
+            pendingWithdrawals.textContent = pendingWithdrawalsCount;
+        }
+        
+        // View payment details
+        function viewPayment(paymentId) {
+            const payment = allPayments.find(p => p.id === paymentId);
+            if (!payment) return;
+            
+            currentPaymentId = paymentId;
+            
+            modalBusiness.textContent = payment.businessName || 'N/A';
+            modalWhatsapp.textContent = payment.whatsapp || 'N/A';
+            modalPaymentPhone.textContent = payment.paymentPhone || 'N/A';
+            modalType.textContent = payment.type === 'withdrawal' ? 'Withdrawal' : 'Package Payment';
+            modalStatus.textContent = payment.status === 'approved' ? 'Approved' : 
+                                     payment.status === 'rejected' ? 'Rejected' : 'Pending';
+            modalAmount.textContent = formatCurrency(payment.amount || 0);
+            modalDate.textContent = formatDate(payment.timestamp) || 'N/A';
+            modalPackage.textContent = payment.package || 'N/A';
+            
+            // Update action buttons
+            modalApproveBtn.onclick = () => approvePayment(paymentId);
+            modalRejectBtn.onclick = () => rejectPayment(paymentId);
+            
+            // Show modal
+            paymentModal.style.display = 'flex';
+        }
+        
+     function approvePayment(paymentId) {
+    setLoading(true);
+
+    db.collection("payments").doc(paymentId).update({
+        status: "approved"
+    })
+    .then(() => {
+        // Update local data
+        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+        if (paymentIndex !== -1) {
+            allPayments[paymentIndex].status = "approved";
+        }
+
+        // Get the payment data
+        const payment = allPayments.find(p => p.id === paymentId);
+        const phone = payment ? payment.paymentPhone : null;
+
+        if (phone) {
+            // Find the matching pending business
+            db.collection("pendingBusinesses").where("paymentPhone", "==", phone).get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            const businessData = doc.data();
+
+                            // Save to 'businesses'
+                            db.collection("businesses").add(businessData)
+                                .then(() => {
+                                    // Delete from 'pendingBusinesses'
+                                    db.collection("pendingBusinesses").doc(doc.id).delete()
+                                        .then(() => {
+                                            console.log("✅ Business moved successfully.");
+                                        })
+                                        .catch(error => {
+                                            console.error("Error deleting pending business:", error);
+                                        });
+                                })
+                                .catch(error => {
+                                    console.error("Error adding to businesses:", error);
+                                });
+                        });
+                    } else {
+                        console.warn("⚠️ No pending business found for phone:", phone);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error finding pending business:", error);
+                });
+        }
+
+        renderPayments();
+        updateSummary();
+        setLoading(false);
+        paymentModal.style.display = 'none';
+        alert("✅ Payment approved and business published!");
+    })
+    .catch(error => {
+        console.error("Error approving payment: ", error);
+        alert("❌ Failed to approve payment: " + error.message);
+        setLoading(false);
+    });
+}
+        
+        // Initialize the payments dashboard
+        function initPaymentsDashboard() {
+            // Load payments
+            loadPayments();
+            
+            // Setup search
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase();
+                renderPayments();
+            });
+            
+            // Setup filter buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderPayments();
+                });
+            });
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                paymentModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === paymentModal) {
+                    paymentModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize when DOM is loaded
+       async function moveBusinessToApproved(paymentPhone) {
+  try {
+    const snapshot = await db.collection("pendingBusinesses")
+      .where("paymentPhone", "==", paymentPhone)
+      .get();
+
+    if (snapshot.empty) {
+      console.log("❌ No matching business found for phone:", paymentPhone);
+      return;
+    }
+
+    snapshot.forEach(async doc => {
+      const businessData = doc.data();
+
+      await db.collection("businesses").add(businessData);
+      await db.collection("pendingBusinesses").doc(doc.id).delete();
+
+      console.log("✅ Business approved and published.");
+    });
+  } catch (error) {
+    console.error("❌ Error approving business:", error);
+  }
+}
+       
+        document.addEventListener('DOMContentLoaded', initPaymentsDashboard);
+        
+        firebase.auth().onAuthStateChanged(user => {
+  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+    window.location.href = "login.html";
+  }
+});
+    </script>
+</body>
+</html>

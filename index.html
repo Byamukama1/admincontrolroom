@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBlinks Business Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #ffca2c;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: #333;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            border-radius: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Search and Filter */
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: #e9ecef;
+            color: var(--dark);
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Summary Cards */
+        .summary-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        .approved {
+            color: var(--success);
+        }
+
+        .pending {
+            color: var(--warning);
+        }
+
+        .rejected {
+            color: var(--danger);
+        }
+
+        .starter {
+            color: #6c757d;
+        }
+
+        .basic {
+            color: #4361ee;
+        }
+
+        .standard {
+            color: #28a745;
+        }
+        
+        .professional {
+            color: #8b5cf6;
+        }
+        
+        .premium {
+            color: #f59e0b;
+        }
+        
+        .enterprise {
+            color: #dc3545;
+        }
+
+        /* Business Table */
+        .business-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .business-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .business-table th {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+        }
+
+        .business-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .business-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .business-table .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-approved {
+            background: rgba(40, 167, 69, 0.1);
+            color: #166534;
+        }
+
+        .status-pending {
+            background: rgba(255, 202, 44, 0.1);
+            color: #b45309;
+        }
+
+        .status-rejected {
+            background: rgba(220, 53, 69, 0.1);
+            color: #b91c1c;
+        }
+        
+        .business-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .business-description {
+            color: var(--secondary);
+            font-size: 13px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-approve {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+        }
+
+        .btn-approve:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-reject {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-reject:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete {
+            background: rgba(108, 117, 125, 0.1);
+            color: var(--secondary);
+        }
+
+        .btn-delete:hover {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-view {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+
+        .btn-view:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--secondary);
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Business Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 18px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .business-detail {
+            margin-bottom: 20px;
+        }
+        
+        .business-detail h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .business-detail p {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        .business-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .modal-footer {
+            padding: 18px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .business-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .summary-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .filter-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .filter-btn {
+                flex: 1;
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Business Detail Modal -->
+    <div class="modal" id="business-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Business Details</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="action-btn btn-approve" id="modal-approve-btn">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button class="action-btn btn-reject" id="modal-reject-btn">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+                <button class="action-btn btn-delete" id="modal-delete-btn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>OBlinks Business Management</span>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">A</div>
+                <span>Admin</span>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="search-section">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search by WhatsApp, business name, location...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All Businesses</button>
+                <button class="filter-btn" data-filter="approved">Approved</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+                <button class="filter-btn" data-filter="rejected">Rejected</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-container">
+            <div class="summary-card">
+                <div class="summary-number approved" id="total-approved">0</div>
+                <div class="summary-label">Approved Businesses</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number pending" id="total-pending">0</div>
+                <div class="summary-label">Pending Approval</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number rejected" id="total-rejected">0</div>
+                <div class="summary-label">Rejected</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number starter" id="total-starter">0</div>
+                <div class="summary-label">Starter Package</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number basic" id="total-basic">0</div>
+                <div class="summary-label">Basic Package</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number standard" id="total-standard">0</div>
+                <div class="summary-label">Standard Package</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number professional" id="total-professional">0</div>
+                <div class="summary-label">Professional</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number premium" id="total-premium">0</div>
+                <div class="summary-label">Premium</div>
+            </div>
+        </div>
+
+        <!-- Business Table -->
+        <div class="business-table-container">
+            <table class="business-table">
+                <thead>
+                    <tr>
+                        <th>Business</th>
+                        <th>WhatsApp</th>
+                        <th>Location</th>
+                        <th>Package</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="business-table-body">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading businesses...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!--navigation buttons -->
+    <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'">
+        <i class="fas fa-building"></i>
+        <span>Businesses</span>
+    </div> 
+    <div class="nav-item" onclick="window.location.href='payments.html'">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>Payments</span>
+    </div>
+    <div class="nav-item active" onclick="window.location.href='referrals.html'">
+        <i class="fas fa-users"></i>
+        <span>Referrals</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='more.html'">
+        <i class="fas fa-cog"></i>
+        <span>more</span>
+    </div>
+</div>
+
+    <script>
+        // Firebase configuration - Using your provided credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+            authDomain: "oblinks-7fdb1.firebaseapp.com",
+            projectId: "oblinks-7fdb1",
+            storageBucket: "oblinks-7fdb1.appspot.com",
+            messagingSenderId: "587017639779",
+            appId: "1:587017639779:web:d11b60f40f431cfc202556"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const searchInput = document.getElementById('search-input');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const businessTableBody = document.getElementById('business-table-body');
+        
+        // Summary elements
+        const totalApproved = document.getElementById('total-approved');
+        const totalPending = document.getElementById('total-pending');
+        const totalRejected = document.getElementById('total-rejected');
+        const totalStarter = document.getElementById('total-starter');
+        const totalBasic = document.getElementById('total-basic');
+        const totalStandard = document.getElementById('total-standard');
+        const totalProfessional = document.getElementById('total-professional');
+        const totalPremium = document.getElementById('total-premium');
+        
+        // Modal elements
+        const businessModal = document.getElementById('business-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalApproveBtn = document.getElementById('modal-approve-btn');
+        const modalRejectBtn = document.getElementById('modal-reject-btn');
+        const modalDeleteBtn = document.getElementById('modal-delete-btn');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // App State
+        let allBusinesses = [];
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentBusinessId = null;
+        
+        // Set loading state
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+        }
+        
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Truncate text
+        function truncate(str, n) {
+            return (str.length > n) ? str.substring(0, n-1) + '...' : str;
+        }
+        
+        // Capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        // Load businesses from Firestore
+        function loadBusinesses() {
+            setLoading(true);
+            
+            db.collection("businesses")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then(querySnapshot => {
+                    allBusinesses = [];
+                    querySnapshot.forEach(doc => {
+                        const business = {
+                            id: doc.id,
+                            ...doc.data(),
+                            timestamp: doc.data().timestamp
+                        };
+                        allBusinesses.push(business);
+                    });
+                    
+                    renderBusinesses();
+                    updateSummary();
+                    setLoading(false);
+                })
+                .catch(error => {
+                    console.error("Error getting businesses: ", error);
+                    businessTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
+                                <i class="fas fa-exclamation-circle"></i> Failed to load businesses: ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                    setLoading(false);
+                });
+        }
+        
+        // Render businesses to the table
+        function renderBusinesses() {
+            let tableHTML = '';
+            
+            // Filter businesses based on current filter and search
+            const filteredBusinesses = allBusinesses.filter(business => {
+                // Apply filter
+                if (currentFilter !== 'all' && business.status !== currentFilter) {
+                    return false;
+                }
+                
+                // Apply search
+                if (currentSearch) {
+                    const searchLower = currentSearch.toLowerCase();
+                    const matchesWhatsapp = business.whatsapp?.toLowerCase().includes(searchLower) || false;
+                    const matchesTitle = business.title?.toLowerCase().includes(searchLower) || false;
+                    const matchesLocation = business.location?.toLowerCase().includes(searchLower) || false;
+                    
+                    if (!(matchesWhatsapp || matchesTitle || matchesLocation)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            if (filteredBusinesses.length === 0) {
+                tableHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-building"></i> No businesses found
+                        </td>
+                    </tr>
+                `;
+            } else {
+                filteredBusinesses.forEach(business => {
+                    tableHTML += `
+                        <tr>
+                            <td>
+                                <div class="business-title">${business.title || 'No title'}</div>
+                                <div class="business-description">${truncate(business.description || '', 40)}</div>
+                            </td>
+                            <td>${business.whatsapp || 'N/A'}</td>
+                            <td>${business.location || 'N/A'}</td>
+                            <td>${business.package || 'Starter'}</td>
+                            <td>
+                                <span class="status status-${business.status || 'pending'}">
+                                    ${capitalizeFirstLetter(business.status || 'pending')}
+                                </span>
+                            </td>
+                            <td>${formatDate(business.timestamp) || 'N/A'}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-view" onclick="viewBusiness('${business.id}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            businessTableBody.innerHTML = tableHTML;
+        }
+        
+        // Update summary cards
+        function updateSummary() {
+            totalApproved.textContent = allBusinesses.filter(b => b.status === 'approved').length;
+            totalPending.textContent = allBusinesses.filter(b => b.status === 'pending').length;
+            totalRejected.textContent = allBusinesses.filter(b => b.status === 'rejected').length;
+            
+            totalStarter.textContent = allBusinesses.filter(b => b.package === 'Starter').length;
+            totalBasic.textContent = allBusinesses.filter(b => b.package === 'Basic').length;
+            totalStandard.textContent = allBusinesses.filter(b => b.package === 'Standard').length;
+            totalProfessional.textContent = allBusinesses.filter(b => b.package === 'Professional').length;
+            totalPremium.textContent = allBusinesses.filter(b => b.package === 'Premium').length;
+        }
+        
+        // View business details
+        function viewBusiness(businessId) {
+            const business = allBusinesses.find(b => b.id === businessId);
+            if (!business) return;
+            
+            currentBusinessId = businessId;
+            
+            modalTitle.textContent = business.title || 'Business Details';
+            
+            // Build modal content
+            modalBody.innerHTML = `
+                <div class="business-detail">
+                    <h4><i class="fas fa-info-circle"></i> Description</h4>
+                    <p>${business.description || 'No description provided'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fas fa-map-marker-alt"></i> Location</h4>
+                    <p>${business.location || 'N/A'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fab fa-whatsapp"></i> WhatsApp</h4>
+                    <p>${business.whatsapp || 'N/A'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fas fa-external-link-alt"></i> Business Link</h4>
+                    <p>${business.businessLink ? `<a href="${business.businessLink}" target="_blank">${business.businessLink}</a>` : 'N/A'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fas fa-box"></i> Package</h4>
+                    <p>${business.package || 'Starter'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fas fa-calendar-alt"></i> Submitted On</h4>
+                    <p>${formatDate(business.timestamp) || 'N/A'}</p>
+                </div>
+                
+                <div class="business-detail">
+                    <h4><i class="fas fa-image"></i> Business Image</h4>
+                    ${business.mediaUrl ? `<img src="${business.mediaUrl}" alt="Business image" class="business-image">` : '<p>No image uploaded</p>'}
+                </div>
+            `;
+            
+            // Update action buttons
+            modalApproveBtn.onclick = () => updateBusinessStatus('approved');
+            modalRejectBtn.onclick = () => updateBusinessStatus('rejected');
+            modalDeleteBtn.onclick = deleteBusiness;
+            
+            // Show modal
+            businessModal.style.display = 'flex';
+        }
+        
+        // Update business status
+        function updateBusinessStatus(status) {
+            if (!currentBusinessId) return;
+            
+            setLoading(true);
+            
+            db.collection("businesses").doc(currentBusinessId).update({
+                status: status
+            })
+            .then(() => {
+                // Update local data
+                const businessIndex = allBusinesses.findIndex(b => b.id === currentBusinessId);
+                if (businessIndex !== -1) {
+                    allBusinesses[businessIndex].status = status;
+                }
+                
+                // Update UI
+                renderBusinesses();
+                updateSummary();
+                setLoading(false);
+                
+                // Close modal
+                businessModal.style.display = 'none';
+                
+                alert(`Business status updated to ${status}`);
+            })
+            .catch(error => {
+                console.error("Error updating business: ", error);
+                alert("Failed to update business status: " + error.message);
+                setLoading(false);
+            });
+        }
+        
+        // Delete business
+        function deleteBusiness() {
+            if (!currentBusinessId) return;
+            
+            if (!confirm("Are you sure you want to delete this business? This action cannot be undone.")) {
+                return;
+            }
+            
+            setLoading(true);
+            
+            db.collection("businesses").doc(currentBusinessId).delete()
+            .then(() => {
+                // Remove from local data
+                allBusinesses = allBusinesses.filter(b => b.id !== currentBusinessId);
+                
+                // Update UI
+                renderBusinesses();
+                updateSummary();
+                setLoading(false);
+                
+                // Close modal
+                businessModal.style.display = 'none';
+                
+                alert("Business deleted successfully");
+            })
+            .catch(error => {
+                console.error("Error deleting business: ", error);
+                alert("Failed to delete business: " + error.message);
+                setLoading(false);
+            });
+        }
+        
+        // Initialize the dashboard
+        function initDashboard() {
+            // Load businesses
+            loadBusinesses();
+            
+            // Setup search
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase();
+                renderBusinesses();
+            });
+            
+            // Setup filter buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderBusinesses();
+                });
+            });
+            
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                businessModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === businessModal) {
+                    businessModal.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+        
+        firebase.auth().onAuthStateChanged(user => {
+  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+    window.location.href = "login.html";
+  }
+});
+    </script>
+</body>
+</html>
