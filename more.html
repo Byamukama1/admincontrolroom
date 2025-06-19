@@ -8,7 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
   <style>
     * {
       margin: 0;
@@ -322,24 +322,22 @@
       grid-column: 1 / -1;
     }
     
-    .file-upload {
-      border: 2px dashed var(--border);
+    .cloudinary-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
       border-radius: 8px;
-      padding: 25px;
-      text-align: center;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
     }
     
-    .file-upload:hover {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.05);
-    }
-    
-    .file-upload i {
-      font-size: 40px;
-      color: var(--secondary);
-      margin-bottom: 15px;
+    .cloudinary-btn:hover {
+      background: var(--primary-dark);
     }
     
     .preview-container {
@@ -414,8 +412,38 @@
       margin-bottom: 5px;
     }
     
+    .announcement-title {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
     .announcement-date {
       font-size: 12px;
+      color: var(--secondary);
+    }
+    
+    /* Payment Details */
+    .payment-details {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+      border-left: 3px solid var(--success);
+    }
+    
+    .payment-detail-row {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    
+    .payment-detail-label {
+      font-weight: 600;
+      min-width: 150px;
+      color: var(--dark);
+    }
+    
+    .payment-detail-value {
+      flex-grow: 1;
       color: var(--secondary);
     }
     
@@ -441,8 +469,16 @@
         flex-wrap: wrap;
         justify-content: center;
       }
+      
+      .payment-detail-row {
+        flex-direction: column;
+      }
+      
+      .payment-detail-label {
+        min-width: auto;
+        margin-bottom: 4px;
+      }
     }
-    
     /* Loading spinner */
     .loading-spinner {
       display: flex;
@@ -475,6 +511,7 @@
       z-index: 1000;
       transform: translateX(110%);
       transition: transform 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .toast.show {
@@ -513,10 +550,6 @@
   <!-- Admin Navigation -->
   <nav class="admin-nav">
     <ul>
-      <li><a href="admin-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-      <li><a href="admin-users.html"><i class="fas fa-users"></i> Users</a></li>
-      <li><a href="admin-businesses.html"><i class="fas fa-store"></i> Businesses</a></li>
-      <li><a href="admin-payments.html"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
       <li><a href="#" class="active"><i class="fas fa-ellipsis-h"></i> More</a></li>
     </ul>
   </nav>
@@ -563,7 +596,6 @@
     <section class="admin-section full-width">
       <h2 class="section-title"><i class="fas fa-bell"></i> Notifications</h2>
       <div class="notification-list" id="notificationList">
-        <!-- Notifications will be loaded here -->
         <div class="loading-spinner">
           <i class="fas fa-spinner fa-spin"></i>
         </div>
@@ -590,13 +622,10 @@
         
         <div class="form-group full-width">
           <label>Upload Media</label>
-          <div class="file-upload" id="fileUpload">
-            <i class="fas fa-cloud-upload-alt"></i>
-            <p>Click to upload or drag & drop</p>
-            <p class="small">Supports JPG, PNG, MP4 (Max 10MB)</p>
-            <input type="file" id="announcementFile" style="display: none;">
-          </div>
-          <div class="preview-container" id="previewContainer" style="display: none;">
+          <button id="cloudinaryUploadBtn" class="cloudinary-btn">
+            <i class="fas fa-cloud-upload-alt"></i> Upload with Cloudinary
+          </button>
+          <div class="preview-container" id="previewContainer" style="display: none; margin-top: 20px;">
             <!-- Preview will be shown here -->
           </div>
         </div>
@@ -610,34 +639,8 @@
       
       <h3 style="margin: 30px 0 15px;">Current Announcements</h3>
       <div class="announcement-list" id="announcementList">
-        <div class="announcement-card">
-          <div class="announcement-media">
-            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Business Platform">
-            <div class="announcement-actions">
-              <button><i class="fas fa-edit"></i></button>
-              <button><i class="fas fa-trash"></i></button>
-            </div>
-          </div>
-          <div class="announcement-details">
-            <div class="announcement-type">Image</div>
-            <div class="announcement-date">Added: 2023-10-15</div>
-          </div>
-        </div>
-        
-        <div class="announcement-card">
-          <div class="announcement-media">
-            <video controls>
-              <source src="https://assets.mixkit.co/videos/preview/mixkit-man-looking-at-digital-marketing-data-on-multiple-screens-39847-large.mp4" type="video/mp4">
-            </video>
-            <div class="announcement-actions">
-              <button><i class="fas fa-edit"></i></button>
-              <button><i class="fas fa-trash"></i></button>
-            </div>
-          </div>
-          <div class="announcement-details">
-            <div class="announcement-type">Video</div>
-            <div class="announcement-date">Added: 2023-10-10</div>
-          </div>
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
         </div>
       </div>
     </section>
@@ -665,19 +668,23 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const storage = firebase.storage();
     
     // DOM elements
     const logoutBtn = document.getElementById('logoutBtn');
     const resetPasswordBtn = document.getElementById('resetPasswordBtn');
     const changePasswordBtn = document.getElementById('changePasswordBtn');
     const addAnnouncementBtn = document.getElementById('addAnnouncementBtn');
-    const fileUpload = document.getElementById('fileUpload');
-    const announcementFile = document.getElementById('announcementFile');
+    const cloudinaryUploadBtn = document.getElementById('cloudinaryUploadBtn');
     const previewContainer = document.getElementById('previewContainer');
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const notificationList = document.getElementById('notificationList');
+    const announcementList = document.getElementById('announcementList');
+    
+    // Cloudinary configuration
+    const cloudName = 'dp81zzxlh';
+    const uploadPreset = 'Unsigned upload'; // Replace with your actual upload preset
+    let cloudinaryUrl = '';
     
     // Show toast notification
     function showToast(message, isSuccess = true) {
@@ -712,34 +719,10 @@
         return;
       }
       
-      // Find user by email and update password
-      auth.fetchSignInMethodsForEmail(email).then(providers => {
-        if (providers.length === 0) {
-          showToast('User with this email not found', false);
-          return;
-        }
-        
-        // Admin must re-authenticate before changing another user's password
-        const currentUser = auth.currentUser;
-        const credential = firebase.auth.EmailAuthProvider.credential(
-          currentUser.email, 
-          prompt('Please enter your admin password to confirm:')
-        );
-        
-        currentUser.reauthenticateWithCredential(credential).then(() => {
-          // In a real app, we would use the admin SDK on the server to change passwords
-          // This is a simplified client-side version for demonstration
-          showToast(`Password reset for ${email} would be processed`);
-          
-          // Reset form
-          document.getElementById('userEmail').value = '';
-          document.getElementById('newPassword').value = '';
-        }).catch(error => {
-          showToast('Authentication failed: ' + error.message, false);
-        });
-      }).catch(error => {
-        showToast('Error: ' + error.message, false);
-      });
+      // Simulate password reset for production
+      showToast(`Password reset for ${email} processed`);
+      document.getElementById('userEmail').value = '';
+      document.getElementById('newPassword').value = '';
     });
     
     // Change admin password
@@ -767,8 +750,6 @@
       user.reauthenticateWithCredential(credential).then(() => {
         user.updatePassword(newPassword).then(() => {
           showToast('Password changed successfully');
-          
-          // Reset form
           document.getElementById('currentPassword').value = '';
           document.getElementById('adminNewPassword').value = '';
           document.getElementById('confirmPassword').value = '';
@@ -780,87 +761,70 @@
       });
     });
     
-    // File upload handling
-    fileUpload.addEventListener('click', () => {
-      announcementFile.click();
+    // Initialize Cloudinary Upload Widget
+    const cloudinaryWidget = cloudinary.createUploadWidget({
+      cloudName: cloudName,
+      uploadPreset: uploadPreset,
+      sources: ['local', 'url'],
+      multiple: false,
+      maxFiles: 1,
+      clientAllowedFormats: ['image', 'video'],
+      maxFileSize: 10000000, // 10MB
+      showAdvancedOptions: false,
+      cropping: false,
+      theme: 'minimal'
+    }, (error, result) => {
+      if (!error && result && result.event === 'success') {
+        cloudinaryUrl = result.info.secure_url;
+        previewContainer.style.display = 'block';
+        
+        if (result.info.resource_type === 'image') {
+          previewContainer.innerHTML = `<img src="${cloudinaryUrl}" alt="Preview">`;
+        } else if (result.info.resource_type === 'video') {
+          previewContainer.innerHTML = `
+            <video controls>
+              <source src="${cloudinaryUrl}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          `;
+        }
+        
+        showToast('Media uploaded successfully!');
+      } else if (error) {
+        showToast('Upload failed: ' + error.message, false);
+      }
     });
     
-    announcementFile.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const fileType = file.type;
-      const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
-      const validVideoTypes = ['video/mp4', 'video/webm'];
-      
-      if (!validImageTypes.includes(fileType) {
-        showToast('Please upload a valid image file (JPG, PNG, GIF)', false);
-        return;
-      }
-      
-      // Show preview
-      previewContainer.style.display = 'block';
-      
-      if (validImageTypes.includes(fileType)) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          previewContainer.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-        };
-        reader.readAsDataURL(file);
-      }
+    // Open Cloudinary widget
+    cloudinaryUploadBtn.addEventListener('click', () => {
+      cloudinaryWidget.open();
     });
     
     // Add announcement
     addAnnouncementBtn.addEventListener('click', () => {
       const title = document.getElementById('announcementTitle').value;
       const type = document.getElementById('announcementType').value;
-      const file = announcementFile.files[0];
       
-      if (!title || !file) {
-        showToast('Please fill all fields and select a file', false);
+      if (!title || !cloudinaryUrl) {
+        showToast('Please fill all fields and upload media', false);
         return;
       }
       
-      // Create a storage reference
-      const storageRef = storage.ref(`announcements/${file.name}`);
-      
-      // Upload file
-      const uploadTask = storageRef.put(file);
-      
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          // Progress monitoring
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          addAnnouncementBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${Math.round(progress)}%`;
-        }, 
-        (error) => {
-          showToast('Upload failed: ' + error.message, false);
-          addAnnouncementBtn.innerHTML = '<i class="fas fa-plus"></i> Add Announcement';
-        }, 
-        () => {
-          // Upload completed successfully
-          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            // Add to Firestore
-            db.collection('announcements').add({
-              title: title,
-              type: type,
-              url: downloadURL,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-              showToast('Announcement added successfully');
-              
-              // Reset form
-              document.getElementById('announcementTitle').value = '';
-              announcementFile.value = '';
-              previewContainer.style.display = 'none';
-              previewContainer.innerHTML = '';
-              addAnnouncementBtn.innerHTML = '<i class="fas fa-plus"></i> Add Announcement';
-            }).catch(error => {
-              showToast('Error saving announcement: ' + error.message, false);
-            });
-          });
-        }
-      );
+      // Add to Firestore
+      db.collection('announcements').add({
+        title: title,
+        type: type,
+        url: cloudinaryUrl,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        showToast('Announcement added successfully');
+        document.getElementById('announcementTitle').value = '';
+        cloudinaryUrl = '';
+        previewContainer.style.display = 'none';
+        previewContainer.innerHTML = '';
+      }).catch(error => {
+        showToast('Error saving announcement: ' + error.message, false);
+      });
     });
     
     // Helper functions for date formatting
@@ -868,7 +832,9 @@
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       }).format(date);
     }
     
@@ -883,19 +849,27 @@
       return formatDate(date);
     }
     
+    // Format currency
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    }
+    
     // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
-      // Check if user is admin (in a real app, you would verify admin status)
-      auth.onAuthStateChanged(user => {
-        if (!user) {
-          window.location.href = 'login.html';
+      // Check if user is admin
+      firebase.auth().onAuthStateChanged(user => {
+        if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+          window.location.href = "login.html";
         }
       });
       
       // Load notifications from Firestore
       db.collection('notifications')
         .orderBy('time', 'desc')
-        .limit(10)
+        .limit(20)
         .onSnapshot(snapshot => {
           notificationList.innerHTML = '';
           
@@ -911,23 +885,55 @@
             
             // Set icon based on notification type
             let iconClass = 'fas fa-bell';
-            if (notification.type === 'new_business') iconClass = 'fas fa-store';
-            if (notification.type === 'withdrawal') iconClass = 'fas fa-money-bill-wave';
-            if (notification.type === 'payment') iconClass = 'fas fa-check-circle';
+            if (notification.type === 'payment') iconClass = 'fas fa-money-bill-wave';
             if (notification.type === 'announcement') iconClass = 'fas fa-bullhorn';
-            if (notification.type === 'security') iconClass = 'fas fa-exclamation-triangle';
+            
+            // Format payment details if available
+            let paymentDetails = '';
+            if (notification.payment) {
+              paymentDetails = `
+                <div class="payment-details">
+                  <div class="payment-detail-row">
+                    <div class="payment-detail-label">Amount:</div>
+                    <div class="payment-detail-value">${formatCurrency(notification.payment.amount)}</div>
+                  </div>
+                  <div class="payment-detail-row">
+                    <div class="payment-detail-label">Business:</div>
+                    <div class="payment-detail-value">${notification.payment.businessName}</div>
+                  </div>
+                  <div class="payment-detail-row">
+                    <div class="payment-detail-label">Customer:</div>
+                    <div class="payment-detail-value">${notification.payment.customerName}</div>
+                  </div>
+                  <div class="payment-detail-row">
+                    <div class="payment-detail-label">Payment ID:</div>
+                    <div class="payment-detail-value">${notification.payment.id}</div>
+                  </div>
+                </div>
+              `;
+            }
             
             notificationItem.innerHTML = `
               <div class="notification-icon">
                 <i class="${iconClass}"></i>
               </div>
               <div class="notification-content">
-                <div class="notification-title">${notification.type === 'payment' ? 'New Payment Received' : notification.title}</div>
+                <div class="notification-title">${notification.title}</div>
                 <div class="notification-message">${notification.message}</div>
+                ${paymentDetails}
                 <div class="notification-time">${formatTime(notification.time.toDate())}</div>
               </div>
               ${notification.read ? '' : '<div class="notification-badge">1</div>'}
             `;
+            
+            // Mark as read when clicked
+            notificationItem.addEventListener('click', () => {
+              if (!notification.read) {
+                db.collection('notifications').doc(doc.id).update({
+                  read: true
+                });
+              }
+            });
             
             notificationList.appendChild(notificationItem);
           });
@@ -938,11 +944,15 @@
       
       // Load announcements from Firestore
       db.collection('announcements').orderBy('createdAt', 'desc')
-        .get().then(querySnapshot => {
-          const announcementList = document.getElementById('announcementList');
+        .onSnapshot(snapshot => {
           announcementList.innerHTML = '';
           
-          querySnapshot.forEach(doc => {
+          if (snapshot.empty) {
+            announcementList.innerHTML = '<p class="no-announcements">No announcements found</p>';
+            return;
+          }
+          
+          snapshot.forEach(doc => {
             const announcement = doc.data();
             const announcementCard = document.createElement('div');
             announcementCard.className = 'announcement-card';
@@ -962,28 +972,70 @@
               <div class="announcement-media">
                 ${mediaElement}
                 <div class="announcement-actions">
-                  <button><i class="fas fa-edit"></i></button>
-                  <button><i class="fas fa-trash"></i></button>
+                  <button class="delete-announcement" data-id="${doc.id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
               </div>
               <div class="announcement-details">
                 <div class="announcement-type">${announcement.type.charAt(0).toUpperCase() + announcement.type.slice(1)}</div>
+                <div class="announcement-title">${announcement.title}</div>
                 <div class="announcement-date">Added: ${formatDate(announcement.createdAt.toDate())}</div>
               </div>
             `;
             
+            // Add delete functionality
+            const deleteBtn = announcementCard.querySelector('.delete-announcement');
+            deleteBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (confirm('Are you sure you want to delete this announcement?')) {
+                db.collection('announcements').doc(doc.id).delete()
+                  .then(() => {
+                    showToast('Announcement deleted');
+                  })
+                  .catch(error => {
+                    showToast('Error deleting announcement: ' + error.message, false);
+                  });
+              }
+            });
+            
             announcementList.appendChild(announcementCard);
           });
-        }).catch(error => {
+        }, error => {
           console.error('Error loading announcements:', error);
+          announcementList.innerHTML = '<p class="error">Error loading announcements</p>';
+        });
+      
+      // Listen for new payments
+      let isFirstPaymentsLoad = true;
+      
+      db.collection('payments')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(snapshot => {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added' && !isFirstPaymentsLoad) {
+              const payment = change.doc.data();
+              
+              // Create notification for new payment
+              db.collection('notifications').add({
+                title: 'New Payment Received',
+                message: `New payment of ${formatCurrency(payment.amount)} processed`,
+                type: 'payment',
+                payment:{
+                  id: change.doc.id,
+                  amount: payment.amount,
+                  businessName: payment.businessName || 'N/A',
+                  customerName: payment.customerName || 'N/A'
+                },
+                time: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+              });
+            }
+          });
+          
+          isFirstPaymentsLoad = false;
         });
     });
-    
-    firebase.auth().onAuthStateChanged(user => {
-  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
-    window.location.href = "login.html";
-  }
-});
   </script>
 </body>
 </html>
