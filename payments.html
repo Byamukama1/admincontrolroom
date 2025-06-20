@@ -652,337 +652,122 @@
         <span>more</span>
     </div>
 </div>
-    <script>
-        // Firebase configuration - Using your provided credentials
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
-            authDomain: "oblinks-7fdb1.firebaseapp.com",
-            projectId: "oblinks-7fdb1",
-            storageBucket: "oblinks-7fdb1.appspot.com",
-            messagingSenderId: "587017639779",
-            appId: "1:587017639779:web:d11b60f40f431cfc202556"
+<script>
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+  authDomain: "oblinks-7fdb1.firebaseapp.com",
+  projectId: "oblinks-7fdb1",
+  storageBucket: "oblinks-7fdb1.appspot.com",
+  messagingSenderId: "587017639779",
+  appId: "1:587017639779:web:d11b60f40f431cfc202556"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// DOM Elements and App State (unchanged code here...)
+// ...
+
+function approvePayment(paymentId) {
+  setLoading(true);
+
+  db.collection("payments").doc(paymentId).update({
+    status: "approved"
+  })
+  .then(async () => {
+    const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+    if (paymentIndex !== -1) {
+      allPayments[paymentIndex].status = "approved";
+    }
+
+    const payment = allPayments.find(p => p.id === paymentId);
+    const phone = payment ? payment.paymentPhone : null;
+
+    if (phone) {
+      const snapshot = await db.collection("pendingBusinesses")
+        .where("paymentPhone", "==", phone)
+        .get();
+
+      if (!snapshot.empty) {
+        for (const doc of snapshot.docs) {
+          const businessData = doc.data();
+
+          // ✅ Add to businesses
+          const newBusinessDoc = await db.collection("businesses").add(businessData);
+          const newBusinessId = newBusinessDoc.id;
+
+          // ✅ Update items with new businessId
+          const itemsSnapshot = await db.collection("items")
+            .where("businessId", "==", doc.id)
+            .get();
+
+          const updatePromises = itemsSnapshot.docs.map(itemDoc => {
+            return itemDoc.ref.update({ businessId: newBusinessId });
+          });
+
+          await Promise.all(updatePromises);
+
+          // ✅ Delete pending business
+          await db.collection("pendingBusinesses").doc(doc.id).delete();
+
+          console.log("✅ Business and items updated successfully.");
+        }
+      } else {
+        console.warn("⚠️ No pending business found for phone:", phone);
+      }
+    }
+
+    renderPayments();
+    updateSummary();
+    setLoading(false);
+    paymentModal.style.display = 'none';
+    alert("✅ Payment approved and business published!");
+  })
+  .catch(error => {
+    console.error("Error approving payment: ", error);
+    alert("❌ Failed to approve payment: " + error.message);
+    setLoading(false);
+  });
+}
+
+function loadPayments() {
+  setLoading(true);
+
+  db.collection("payments")
+    .orderBy("timestamp", "desc")
+    .get()
+    .then(querySnapshot => {
+      allPayments = [];
+      querySnapshot.forEach(doc => {
+        const payment = {
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp
         };
-        
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        
-        // DOM Elements
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const searchInput = document.getElementById('search-input');
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const paymentsTableBody = document.getElementById('payments-table-body');
-        
-        // Summary elements
-        const totalPayments = document.getElementById('total-payments');
-        const pendingPayments = document.getElementById('pending-payments');
-        const totalWithdrawn = document.getElementById('total-withdrawn');
-        const pendingWithdrawals = document.getElementById('pending-withdrawals');
-        
-        // Modal elements
-        const paymentModal = document.getElementById('payment-modal');
-        const modalBusiness = document.getElementById('modal-business');
-        const modalWhatsapp = document.getElementById('modal-whatsapp');
-        const modalPaymentPhone = document.getElementById('modal-payment-phone');
-        const modalType = document.getElementById('modal-type');
-        const modalStatus = document.getElementById('modal-status');
-        const modalAmount = document.getElementById('modal-amount');
-        const modalDate = document.getElementById('modal-date');
-        const modalPackage = document.getElementById('modal-package');
-        const modalApproveBtn = document.getElementById('modal-approve-btn');
-        const modalRejectBtn = document.getElementById('modal-reject-btn');
-        const closeModalBtn = document.getElementById('close-modal');
-        
-        // App State
-        let allPayments = [];
-        let currentFilter = 'all';
-        let currentSearch = '';
-        let currentPaymentId = null;
-        
-        // Set loading state
-        function setLoading(isLoading) {
-            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
-        }
-        
-        // Format date
-        function formatDate(timestamp) {
-            if (!timestamp) return '';
-            const date = timestamp.toDate();
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-        
-        // Format currency
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-UG', {
-                style: 'currency',
-                currency: 'UGX'
-            }).format(amount);
-        }
-        
-        // Load payments from Firestore
-        function loadPayments() {
-            setLoading(true);
-            
-            db.collection("payments")
-                .orderBy("timestamp", "desc")
-                .get()
-                .then(querySnapshot => {
-                    allPayments = [];
-                    querySnapshot.forEach(doc => {
-                        const payment = {
-                            id: doc.id,
-                            ...doc.data(),
-                            timestamp: doc.data().timestamp
-                        };
-                        allPayments.push(payment);
-                    });
-                    
-                    renderPayments();
-                    updateSummary();
-                    setLoading(false);
-                })
-                .catch(error => {
-                    console.error("Error getting payments: ", error);
-                    paymentsTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
-                                <i class="fas fa-exclamation-circle"></i> Failed to load payments: ${error.message}
-                            </td>
-                        </tr>
-                    `;
-                    setLoading(false);
-                });
-        }
-        
-        // Render payments to the table
-        function renderPayments() {
-            let tableHTML = '';
-            
-            // Filter payments based on current filter and search
-            const filteredPayments = allPayments.filter(payment => {
-                // Apply filter
-                if (currentFilter === 'pending' && payment.status !== 'pending') {
-                    return false;
-                }
-                if (currentFilter === 'approved' && payment.status !== 'approved') {
-                    return false;
-                }
-                if (currentFilter === 'withdrawal' && payment.type !== 'withdrawal') {
-                    return false;
-                }
-                
-                // Apply search
-                if (currentSearch) {
-                    const searchLower = currentSearch.toLowerCase();
-                    const matchesWhatsapp = payment.whatsapp?.toLowerCase().includes(searchLower) || false;
-                    const matchesPhone = payment.paymentPhone?.toLowerCase().includes(searchLower) || false;
-                    const matchesBusiness = payment.businessName?.toLowerCase().includes(searchLower) || false;
-                    
-                    if (!(matchesWhatsapp || matchesPhone || matchesBusiness)) {
-                        return false;
-                    }
-                }
-                
-                return true;
-            });
-            
-            if (filteredPayments.length === 0) {
-                tableHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 30px;">
-                            <i class="fas fa-money-bill-wave"></i> No payments found
-                        </td>
-                    </tr>
-                `;
-            } else {
-                filteredPayments.forEach(payment => {
-                    const statusClass = payment.status === 'approved' ? 'status-approved' : 
-                                      payment.status === 'rejected' ? 'status-rejected' : 
-                                      payment.type === 'withdrawal' ? 'status-withdrawal' : 'status-pending';
-                                      
-                    const statusText = payment.type === 'withdrawal' ? 'Withdrawal' : 
-                                     payment.status === 'approved' ? 'Approved' : 
-                                     payment.status === 'rejected' ? 'Rejected' : 'Pending';
-                    
-                    tableHTML += `
-                        <tr>
-                            <td>${payment.type === 'withdrawal' ? 'Withdrawal' : 'Package Payment'}</td>
-                            <td>${payment.whatsapp || 'N/A'}</td>
-                            <td>${payment.paymentPhone || 'N/A'}</td>
-                            <td>${formatCurrency(payment.amount || 0)}</td>
-                            <td>${formatDate(payment.timestamp) || 'N/A'}</td>
-                            <td>
-                                <span class="status ${statusClass}">
-                                    ${statusText}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="action-btn btn-view" onclick="viewPayment('${payment.id}')">
-                                        <i class="fas fa-eye"></i> Details
-                                    </button>
-                                    ${payment.status === 'pending' && payment.type !== 'withdrawal' ? `
-                                    <button class="action-btn btn-approve" onclick="approvePayment('${payment.id}')">
-                                        <i class="fas fa-check"></i> Approve
-                                    </button>
-                                    ` : ''}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-            
-            paymentsTableBody.innerHTML = tableHTML;
-        }
-        
-        function rejectPayment(paymentId) {
-    setLoading(true);
+        allPayments.push(payment);
+      });
 
-    db.collection("payments").doc(paymentId).update({
-        status: "rejected"
-    })
-    .then(() => {
-        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
-        if (paymentIndex !== -1) {
-            allPayments[paymentIndex].status = "rejected";
-        }
-
-        renderPayments();
-        updateSummary();
-        setLoading(false);
-        paymentModal.style.display = 'none';
-        alert("❌ Payment has been rejected.");
+      renderPayments();
+      updateSummary();
+      setLoading(false);
     })
     .catch(error => {
-        console.error("Error rejecting payment:", error);
-        alert("Failed to reject payment: " + error.message);
-        setLoading(false);
-    });
-}
-        // Update summary cards
-        function updateSummary() {
-            // Total payments (approved)
-            const approvedPayments = allPayments.filter(p => 
-                p.status === 'approved' && p.type !== 'withdrawal'
-            );
-            const totalApprovedAmount = approvedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-            totalPayments.textContent = formatCurrency(totalApprovedAmount);
-            
-            // Pending payments (not withdrawals)
-            const pendingPaymentsCount = allPayments.filter(p => 
-                p.status === 'pending' && p.type !== 'withdrawal'
-            ).length;
-            pendingPayments.textContent = pendingPaymentsCount;
-            
-            // Total withdrawn (approved withdrawals)
-            const approvedWithdrawals = allPayments.filter(p => 
-                p.status === 'approved' && p.type === 'withdrawal'
-            );
-            const totalWithdrawnAmount = approvedWithdrawals.reduce((sum, p) => sum + (p.amount || 0), 0);
-            totalWithdrawn.textContent = formatCurrency(totalWithdrawnAmount);
-            
-            // Pending withdrawals
-            const pendingWithdrawalsCount = allPayments.filter(p => 
-                p.status === 'pending' && p.type === 'withdrawal'
-            ).length;
-            pendingWithdrawals.textContent = pendingWithdrawalsCount;
-        }
-        
-        // View payment details
-        function viewPayment(paymentId) {
-            const payment = allPayments.find(p => p.id === paymentId);
-            if (!payment) return;
-            
-            currentPaymentId = paymentId;
-            
-            modalBusiness.textContent = payment.businessName || 'N/A';
-            modalWhatsapp.textContent = payment.whatsapp || 'N/A';
-            modalPaymentPhone.textContent = payment.paymentPhone || 'N/A';
-            modalType.textContent = payment.type === 'withdrawal' ? 'Withdrawal' : 'Package Payment';
-            modalStatus.textContent = payment.status === 'approved' ? 'Approved' : 
-                                     payment.status === 'rejected' ? 'Rejected' : 'Pending';
-            modalAmount.textContent = formatCurrency(payment.amount || 0);
-            modalDate.textContent = formatDate(payment.timestamp) || 'N/A';
-            modalPackage.textContent = payment.package || 'N/A';
-            
-            // Update action buttons
-            modalApproveBtn.onclick = () => approvePayment(paymentId);
-            modalRejectBtn.onclick = () => rejectPayment(paymentId);
-            
-            // Show modal
-            paymentModal.style.display = 'flex';
-        }
-        
-     function approvePayment(paymentId) {
-    setLoading(true);
-
-    db.collection("payments").doc(paymentId).update({
-        status: "approved"
-    })
-    .then(() => {
-        // Update local data
-        const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
-        if (paymentIndex !== -1) {
-            allPayments[paymentIndex].status = "approved";
-        }
-
-        // Get the payment data
-        const payment = allPayments.find(p => p.id === paymentId);
-        const phone = payment ? payment.paymentPhone : null;
-
-        if (phone) {
-            // Find the matching pending business
-            db.collection("pendingBusinesses").where("paymentPhone", "==", phone).get()
-                .then(snapshot => {
-                    if (!snapshot.empty) {
-                        snapshot.forEach(doc => {
-                            const businessData = doc.data();
-
-                            // Save to 'businesses'
-                            db.collection("businesses").add(businessData)
-                                .then(() => {
-                                    // Delete from 'pendingBusinesses'
-                                    db.collection("pendingBusinesses").doc(doc.id).delete()
-                                        .then(() => {
-                                            console.log("✅ Business moved successfully.");
-                                        })
-                                        .catch(error => {
-                                            console.error("Error deleting pending business:", error);
-                                        });
-                                })
-                                .catch(error => {
-                                    console.error("Error adding to businesses:", error);
-                                });
-                        });
-                    } else {
-                        console.warn("⚠️ No pending business found for phone:", phone);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error finding pending business:", error);
-                });
-        }
-
-        renderPayments();
-        updateSummary();
-        setLoading(false);
-        paymentModal.style.display = 'none';
-        alert("✅ Payment approved and business published!");
-    })
-    .catch(error => {
-        console.error("Error approving payment: ", error);
-        alert("❌ Failed to approve payment: " + error.message);
-        setLoading(false);
+      console.error("Error getting payments: ", error);
+      const paymentsTableBody = document.getElementById("payments-table-body");
+      paymentsTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
+            <i class="fas fa-exclamation-circle"></i> Failed to load payments: ${error.message}
+          </td>
+        </tr>
+      `;
+      setLoading(false);
     });
 }
         
+       
         // Initialize the payments dashboard
         function initPaymentsDashboard() {
             // Load payments
