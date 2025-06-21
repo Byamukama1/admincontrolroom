@@ -310,8 +310,7 @@
       font-weight: 600;
       flex-shrink: 0;
     }
-    
-    /* Announcements */
+ /* Announcements */
     .announcement-form {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -497,7 +496,8 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
- /* Toast notifications */
+    
+    /* Toast notifications */
     .toast {
       position: fixed;
       top: 20px;
@@ -760,8 +760,8 @@
         showToast('Authentication failed: ' + error.message, false);
       });
     });
-
-   // Initialize Cloudinary Upload Widget
+    
+    // Initialize Cloudinary Upload Widget
     const cloudinaryWidget = cloudinary.createUploadWidget({
       cloudName: cloudName,
       uploadPreset: uploadPreset,
@@ -866,7 +866,7 @@
         }
       });
       
-      // Load notifications from Firestore
+  // Load notifications from Firestore
       db.collection('notifications')
         .orderBy('time', 'desc')
         .limit(20)
@@ -967,8 +967,8 @@
                 </video>
               `;
             }
-
-    announcementCard.innerHTML = `
+            
+            announcementCard.innerHTML = `
               <div class="announcement-media">
                 ${mediaElement}
                 <div class="announcement-actions">
