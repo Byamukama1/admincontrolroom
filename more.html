@@ -479,6 +479,7 @@
         margin-bottom: 4px;
       }
     }
+    
     /* Loading spinner */
     .loading-spinner {
       display: flex;
@@ -496,8 +497,7 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    
-    /* Toast notifications */
+ /* Toast notifications */
     .toast {
       position: fixed;
       top: 20px;
@@ -760,8 +760,8 @@
         showToast('Authentication failed: ' + error.message, false);
       });
     });
-    
-    // Initialize Cloudinary Upload Widget
+
+   // Initialize Cloudinary Upload Widget
     const cloudinaryWidget = cloudinary.createUploadWidget({
       cloudName: cloudName,
       uploadPreset: uploadPreset,
@@ -967,8 +967,8 @@
                 </video>
               `;
             }
-            
-            announcementCard.innerHTML = `
+
+    announcementCard.innerHTML = `
               <div class="announcement-media">
                 ${mediaElement}
                 <div class="announcement-actions">
@@ -1021,7 +1021,7 @@
                 title: 'New Payment Received',
                 message: `New payment of ${formatCurrency(payment.amount)} processed`,
                 type: 'payment',
-                payment:{
+                payment: {
                   id: change.doc.id,
                   amount: payment.amount,
                   businessName: payment.businessName || 'N/A',
