@@ -262,8 +262,7 @@
             background: rgba(220, 53, 69, 0.1);
             color: #b91c1c;
         }
-
-        .status-withdrawal {
+                .status-withdrawal {
             background: rgba(139, 92, 246, 0.1);
             color: #5b21b6;
         }
@@ -374,7 +373,7 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
+
         /* Payment Modal */
         .modal {
             display: none;
@@ -388,7 +387,7 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-content {
             background: white;
             border-radius: 12px;
@@ -397,7 +396,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             overflow: hidden;
         }
-        
+
         .modal-header {
             background: var(--primary);
             color: white;
@@ -405,11 +404,11 @@
             text-align: center;
             position: relative;
         }
-        
+
         .modal-header h3 {
             font-size: 20px;
         }
-        
+
         .close-modal {
             position: absolute;
             top: 12px;
@@ -420,11 +419,11 @@
             font-size: 22px;
             cursor: pointer;
         }
-        
+
         .modal-body {
             padding: 25px;
         }
-        
+
         .payment-detail {
             margin-bottom: 15px;
             display: flex;
@@ -433,16 +432,16 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
-        
+
         .payment-label {
             font-weight: 600;
             color: var(--dark);
         }
-        
+
         .payment-value {
             text-align: right;
         }
-        
+
         .modal-footer {
             padding: 18px;
             background: #f8fafc;
@@ -450,7 +449,7 @@
             justify-content: center;
             gap: 10px;
         }
-        
+
         .amount {
             font-weight: 700;
             color: var(--success);
@@ -463,36 +462,36 @@
                 display: block;
                 overflow-x: auto;
             }
-            
+
             .action-buttons {
                 flex-direction: column;
             }
-            
+
             .summary-container {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             }
         }
-        
+
         @media (max-width: 480px) {
             .header {
                 flex-direction: column;
                 gap: 15px;
             }
-            
+
             .search-section {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .search-container {
                 width: 100%;
             }
-            
+
             .filter-buttons {
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .filter-btn {
                 flex: 1;
                 padding: 8px;
@@ -506,7 +505,7 @@
     <div class="loading-overlay" id="loading-overlay">
         <div class="spinner"></div>
     </div>
-    
+
     <!-- Payment Detail Modal -->
     <div class="modal" id="payment-modal">
         <div class="modal-content">
@@ -588,7 +587,7 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
+         <!-- Summary Cards -->
         <div class="summary-container">
             <div class="summary-card">
                 <div class="summary-number total" id="total-payments">0</div>
@@ -652,6 +651,8 @@
         <span>more</span>
     </div>
 </div>
+
+
 <script>
 // Firebase configuration
 const firebaseConfig = {
@@ -667,22 +668,162 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// DOM Elements and App State (unchanged code here...)
-// ...
+// DOM Elements
+const paymentsTableBody = document.getElementById('payments-table-body');
+const searchInput = document.getElementById('search-input');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const paymentModal = document.getElementById('payment-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const loadingOverlay = document.getElementById('loading-overlay');
+const totalPaymentsEl = document.getElementById('total-payments');
+const pendingPaymentsEl = document.getElementById('pending-payments');
+const totalWithdrawnEl = document.getElementById('total-withdrawn');
+const pendingWithdrawalsEl = document.getElementById('pending-withdrawals');
 
-function approvePayment(paymentId) {
+// App State
+let allPayments = [];
+let currentSearch = '';
+let currentFilter = 'all';
+
+// Set loading state
+function setLoading(isLoading) {
+  loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+}
+
+// Update summary cards
+function updateSummary() {
+  const total = allPayments.length;
+  const pending = allPayments.filter(p => p.status === 'pending').length;
+  const withdrawn = allPayments
+    .filter(p => p.type === 'withdrawal' && p.status === 'approved')
+    .reduce((sum, p) => sum + p.amount, 0);
+  const pendingWithdrawals = allPayments
+    .filter(p => p.type === 'withdrawal' && p.status === 'pending').length;
+
+  totalPaymentsEl.textContent = total;
+  pendingPaymentsEl.textContent = pending;
+  totalWithdrawnEl.textContent = withdrawn.toLocaleString();
+  pendingWithdrawalsEl.textContent = pendingWithdrawals;
+}
+
+// Render payments table
+function renderPayments() {
+  let filteredPayments = allPayments;
+  
+  // Apply filter
+  if (currentFilter !== 'all') {
+    filteredPayments = filteredPayments.filter(p => 
+      currentFilter === 'withdrawal' 
+        ? p.type === 'withdrawal' 
+        : p.status === currentFilter
+    );
+  }
+  
+  // Apply search
+  if (currentSearch) {
+    const searchTerm = currentSearch.toLowerCase();
+    filteredPayments = filteredPayments.filter(p => 
+      (p.whatsappNumber && p.whatsappNumber.toLowerCase().includes(searchTerm)) ||
+      (p.paymentPhone && p.paymentPhone.toLowerCase().includes(searchTerm)) ||
+      (p.businessTitle && p.businessTitle.toLowerCase().includes(searchTerm))
+    );
+  }
+  
+  // Render table
+  let tableHTML = '';
+  
+  if (filteredPayments.length === 0) {
+    tableHTML = `
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 30px;">
+          No payments found
+        </td>
+      </tr>
+    `;
+  } else {
+    filteredPayments.forEach(payment => {
+      const date = payment.timestamp ? new Date(payment.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+      const amount = payment.amount ? payment.amount.toLocaleString() : '0';
+      
+      let statusClass = '';
+      if (payment.status === 'pending') statusClass = 'status-pending';
+      else if (payment.status === 'approved') statusClass = 'status-approved';
+      else if (payment.status === 'rejected') statusClass = 'status-rejected';
+      
+      tableHTML += `
+        <tr>
+          <td>${payment.type || 'Listing'}</td>
+          <td>${payment.whatsappNumber || 'N/A'}</td>
+          <td>${payment.paymentPhone || 'N/A'}</td>
+          <td>${amount} UGX</td>
+          <td>${date}</td>
+          <td><span class="status ${statusClass}">${payment.status}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="action-btn btn-view" data-id="${payment.id}">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+  }
+  
+  paymentsTableBody.innerHTML = tableHTML;
+  
+  // Add event listeners to view buttons
+  document.querySelectorAll('.btn-view').forEach(btn => {
+    btn.addEventListener('click', () => showPaymentDetails(btn.dataset.id));
+  });
+}
+
+// Show payment details modal
+function showPaymentDetails(paymentId) {
+  const payment = allPayments.find(p => p.id === paymentId);
+  if (!payment) return;
+  
+  // Format date
+  const date = payment.timestamp ? new Date(payment.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+  
+  // Update modal content
+  document.getElementById('modal-business').textContent = payment.businessTitle || 'N/A';
+  document.getElementById('modal-whatsapp').textContent = payment.whatsappNumber || 'N/A';
+  document.getElementById('modal-payment-phone').textContent = payment.paymentPhone || 'N/A';
+  document.getElementById('modal-type').textContent = payment.type || 'Business Listing';
+  document.getElementById('modal-status').textContent = payment.status || 'N/A';
+  document.getElementById('modal-amount').textContent = payment.amount ? payment.amount.toLocaleString() : '0';
+  document.getElementById('modal-date').textContent = date;
+  document.getElementById('modal-package').textContent = payment.packageName || 'N/A';
+  
+  // Update action buttons
+  const approveBtn = document.getElementById('modal-approve-btn');
+  const rejectBtn = document.getElementById('modal-reject-btn');
+  
+  approveBtn.onclick = () => approvePayment(paymentId);
+  rejectBtn.onclick = () => rejectPayment(paymentId);
+  
+  // Show modal
+  paymentModal.style.display = 'flex';
+}
+
+// Approve payment and publish business
+async function approvePayment(paymentId) {
   setLoading(true);
 
-  db.collection("payments").doc(paymentId).update({
-    status: "approved"
-  })
-  .then(async () => {
+  try {
+    // Update payment status
+    await db.collection("payments").doc(paymentId).update({
+      status: "approved"
+    });
+
+    // Update local state
     const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
     if (paymentIndex !== -1) {
       allPayments[paymentIndex].status = "approved";
     }
 
-    const payment = allPayments.find(p => p.id === paymentId);
+    const payment = allPayments[paymentIndex];
     const phone = payment ? payment.paymentPhone : null;
 
     if (phone) {
@@ -693,45 +834,67 @@ function approvePayment(paymentId) {
       if (!snapshot.empty) {
         for (const doc of snapshot.docs) {
           const businessData = doc.data();
+          const pendingId = doc.id;
 
-          // ✅ Add to businesses
-          const newBusinessDoc = await db.collection("businesses").add(businessData);
-          const newBusinessId = newBusinessDoc.id;
+          console.log("Original pending business ID:", pendingId);
 
-          // ✅ Update items with new businessId
-          const itemsSnapshot = await db.collection("items")
-            .where("businessId", "==", doc.id)
-            .get();
+          // ✅ Add to businesses with same ID as pending business
+          await db.collection("businesses").doc(pendingId).set(businessData);
+          console.log("✅ Business published with ID:", pendingId);
 
-          const updatePromises = itemsSnapshot.docs.map(itemDoc => {
-            return itemDoc.ref.update({ businessId: newBusinessId });
-          });
-
-          await Promise.all(updatePromises);
-
+          // ⚠️ IMPORTANT: Items are already stored with this businessId
+          // No need to update them
+          
           // ✅ Delete pending business
-          await db.collection("pendingBusinesses").doc(doc.id).delete();
-
-          console.log("✅ Business and items updated successfully.");
+          await db.collection("pendingBusinesses").doc(pendingId).delete();
+          console.log("✅ Pending business deleted");
         }
       } else {
         console.warn("⚠️ No pending business found for phone:", phone);
       }
     }
 
+    // Update UI
     renderPayments();
     updateSummary();
     setLoading(false);
     paymentModal.style.display = 'none';
     alert("✅ Payment approved and business published!");
-  })
-  .catch(error => {
+
+  } catch (error) {
     console.error("Error approving payment: ", error);
     alert("❌ Failed to approve payment: " + error.message);
+    setLoading(false);
+  }
+}
+
+// Reject payment
+function rejectPayment(paymentId) {
+  setLoading(true);
+  
+  db.collection("payments").doc(paymentId).update({
+    status: "rejected"
+  })
+  .then(() => {
+    const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+    if (paymentIndex !== -1) {
+      allPayments[paymentIndex].status = "rejected";
+    }
+    
+    renderPayments();
+    updateSummary();
+    setLoading(false);
+    paymentModal.style.display = 'none';
+    alert("Payment rejected");
+  })
+  .catch(error => {
+    console.error("Error rejecting payment: ", error);
+    alert("Failed to reject payment: " + error.message);
     setLoading(false);
   });
 }
 
+// Load payments
 function loadPayments() {
   setLoading(true);
 
@@ -741,12 +904,12 @@ function loadPayments() {
     .then(querySnapshot => {
       allPayments = [];
       querySnapshot.forEach(doc => {
-        const payment = {
+        allPayments.push({
           id: doc.id,
           ...doc.data(),
-          timestamp: doc.data().timestamp
-        };
-        allPayments.push(payment);
+          // Convert Firestore timestamp to JS date
+          timestamp: doc.data().timestamp 
+        });
       });
 
       renderPayments();
@@ -755,7 +918,6 @@ function loadPayments() {
     })
     .catch(error => {
       console.error("Error getting payments: ", error);
-      const paymentsTableBody = document.getElementById("payments-table-body");
       paymentsTableBody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
@@ -766,74 +928,50 @@ function loadPayments() {
       setLoading(false);
     });
 }
-        
-       
-        // Initialize the payments dashboard
-        function initPaymentsDashboard() {
-            // Load payments
-            loadPayments();
-            
-            // Setup search
-            searchInput.addEventListener('input', (e) => {
-                currentSearch = e.target.value.toLowerCase();
-                renderPayments();
-            });
-            
-            // Setup filter buttons
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentFilter = btn.dataset.filter;
-                    renderPayments();
-                });
-            });
-            
-            // Close modal
-            closeModalBtn.addEventListener('click', () => {
-                paymentModal.style.display = 'none';
-            });
-            
-            // Close modal when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === paymentModal) {
-                    paymentModal.style.display = 'none';
-                }
-            });
-        }
-        
-        // Initialize when DOM is loaded
-       async function moveBusinessToApproved(paymentPhone) {
-  try {
-    const snapshot = await db.collection("pendingBusinesses")
-      .where("paymentPhone", "==", paymentPhone)
-      .get();
 
-    if (snapshot.empty) {
-      console.log("❌ No matching business found for phone:", paymentPhone);
-      return;
-    }
+// Initialize the payments dashboard
+function initPaymentsDashboard() {
+  // Load payments
+  loadPayments();
 
-    snapshot.forEach(async doc => {
-      const businessData = doc.data();
+  // Setup search
+  searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value.toLowerCase();
+    renderPayments();
+  });
 
-      await db.collection("businesses").add(businessData);
-      await db.collection("pendingBusinesses").doc(doc.id).delete();
-
-      console.log("✅ Business approved and published.");
+  // Setup filter buttons
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderPayments();
     });
-  } catch (error) {
-    console.error("❌ Error approving business:", error);
-  }
+  });
+
+  // Close modal
+  closeModalBtn.addEventListener('click', () => {
+    paymentModal.style.display = 'none';
+  });
+
+  // Close modal when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target === paymentModal) {
+      paymentModal.style.display = 'none';
+    }
+  });
 }
-       
-        document.addEventListener('DOMContentLoaded', initPaymentsDashboard);
-        
-        firebase.auth().onAuthStateChanged(user => {
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initPaymentsDashboard);
+
+// Admin authentication check
+firebase.auth().onAuthStateChanged(user => {
   if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
     window.location.href = "login.html";
   }
 });
-    </script>
+</script>
 </body>
 </html>
