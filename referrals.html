@@ -20,6 +20,12 @@
             --dark: #343a40;
             --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
+            --starter: #6c757d;
+            --basic: #4361ee;
+            --standard: #28a745;
+            --professional: #8b5cf6;
+            --premium: #ff6b6b;
+            --enterprise: #20c997;
         }
 
         * {
@@ -142,6 +148,9 @@
             box-shadow: var(--card-shadow);
             text-align: center;
             transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .summary-card:hover {
@@ -165,19 +174,27 @@
         }
 
         .starter {
-            color: #6c757d;
+            color: var(--starter);
         }
 
         .basic {
-            color: #4361ee;
+            color: var(--basic);
         }
 
         .standard {
-            color: #28a745;
+            color: var(--standard);
         }
 
         .professional {
-            color: #8b5cf6;
+            color: var(--professional);
+        }
+
+        .premium {
+            color: var(--premium);
+        }
+
+        .enterprise {
+            color: var(--enterprise);
         }
 
         /* Referrals Table */
@@ -217,57 +234,6 @@
             background-color: #f8fafc;
         }
 
-        .referee-list {
-            max-height: 120px;
-            overflow-y: auto;
-            padding: 5px 0;
-        }
-
-        .referee-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .referee-item:last-child {
-            border-bottom: none;
-        }
-
-        .referee-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .referee-package {
-            font-size: 12px;
-            padding: 3px 8px;
-            border-radius: 12px;
-            background: #f0f7ff;
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .package-starter {
-            background: #f1f5f9;
-            color: #6c757d;
-        }
-
-        .package-basic {
-            background: #eef2ff;
-            color: #4361ee;
-        }
-
-        .package-standard {
-            background: #f0fdf4;
-            color: #28a745;
-        }
-
-        .package-professional {
-            background: #f5f3ff;
-            color: #8b5cf6;
-        }
-
         .referrer-package {
             padding: 5px 12px;
             border-radius: 20px;
@@ -276,32 +242,39 @@
             display: inline-block;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 8px;
+        .package-starter {
+            background: #f1f5f9;
+            color: var(--starter);
         }
 
-        .action-btn {
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        .package-basic {
+            background: #eef2ff;
+            color: var(--basic);
         }
 
-        .btn-view {
-            background: rgba(67, 97, 238, 0.1);
-            color: var(--primary);
+        .package-standard {
+            background: #f0fdf4;
+            color: var(--standard);
         }
 
-        .btn-view:hover {
-            background: var(--primary);
-            color: white;
+        .package-professional {
+            background: #f5f3ff;
+            color: var(--professional);
+        }
+
+        .package-premium {
+            background: #fff0f0;
+            color: var(--premium);
+        }
+
+        .package-enterprise {
+            background: #e6fcf5;
+            color: var(--enterprise);
+        }
+
+        .amount-earned {
+            font-weight: 700;
+            color: var(--success);
         }
 
         /* Bottom Navigation */
@@ -324,6 +297,7 @@
             transition: var(--transition);
             color: var(--secondary);
             font-size: 12px;
+            text-decoration: none;
         }
 
         .nav-item.active {
@@ -358,104 +332,88 @@
             border-top-color: var(--primary);
             animation: spin 1s linear infinite;
         }
-
-        @keyframes spin {
+          @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        /* Referral Detail Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        
-        .modal-header {
-            background: var(--primary);
-            color: white;
-            padding: 18px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .modal-header h3 {
-            font-size: 20px;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-        }
-        
-        .modal-body {
-            padding: 25px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        
-        .referral-detail {
-            margin-bottom: 20px;
-        }
-        
-        .referral-detail h4 {
-            margin-bottom: 8px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .referral-detail p {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 15px;
-        }
-        
-        .referee-list-modal {
-            margin-top: 20px;
-        }
-        
-        .referee-item-modal {
+
+        /* Stats Section */
+        .stats-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .stats-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stats-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Process Button */
+        .btn-process {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
             border-radius: 8px;
-            background: #f8f9fa;
-            margin-bottom: 10px;
-        }
-        
-        .referee-info-modal {
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
         }
-        
-        .referee-date {
-            font-size: 13px;
+
+        .btn-process:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-process:active {
+            transform: translateY(0);
+        }
+
+        .btn-process:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
             color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Responsive */
@@ -468,21 +426,54 @@
             .summary-container {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             }
+            
+            .referrals-table th, 
+            .referrals-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .btn-process {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .stat-item {
+                flex: 0 0 calc(50% - 10px);
+            }
         }
         
-        @media (max-width: 480px) {
+  @media (max-width: 480px) {
             .header {
                 flex-direction: column;
                 gap: 15px;
             }
             
-            .search-section {
-                flex-direction: column;
-                align-items: flex-start;
+            .summary-container {
+                grid-template-columns: 1fr 1fr;
             }
             
-            .search-container {
-                width: 100%;
+            .stats-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .stat-item {
+                flex: 0 0 100%;
             }
         }
     </style>
@@ -493,48 +484,12 @@
         <div class="spinner"></div>
     </div>
     
-    <!-- Referral Detail Modal -->
-    <div class="modal" id="referral-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Referral Details</h3>
-                <button class="close-modal" id="close-modal">&times;</button>
-            </div>
-            <div class="modal-body" id="modal-body">
-                <div class="referral-detail">
-                    <h4><i class="fab fa-whatsapp"></i> Referrer WhatsApp</h4>
-                    <p id="modal-referrer-whatsapp">-</p>
-                </div>
-                
-                <div class="referral-detail">
-                    <h4><i class="fas fa-box"></i> Referrer Package</h4>
-                    <p id="modal-referrer-package">-</p>
-                </div>
-                
-                <div class="referral-detail">
-                    <h4><i class="fas fa-calendar-alt"></i> First Referral Date</h4>
-                    <p id="modal-first-date">-</p>
-                </div>
-                
-                <div class="referral-detail">
-                    <h4><i class="fas fa-users"></i> Total Referrals</h4>
-                    <p id="modal-total-referrals">-</p>
-                </div>
-                
-                <h4 style="margin-top: 20px;"><i class="fas fa-user-friends"></i> Referees</h4>
-                <div class="referee-list-modal" id="referee-list-modal">
-                    <!-- Referees will be populated here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="container">
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <i class="fas fa-link"></i>
-                <span>OBlinks Referrals Management</span>
+                <i class="fas fa-chart-line"></i>
+                <span>OBlinks Referrals Dashboard</span>
             </div>
             <div class="user-info">
                 <div class="user-avatar">A</div>
@@ -542,12 +497,37 @@
             </div>
         </div>
 
+        <!-- Stats Header -->
+        <div class="stats-header">
+            <div class="stats-title">Referral Earnings</div>
+            <div class="stats-amount" id="total-earnings">0 UGX</div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="pending-earnings">0</div>
+                <div class="stat-label">Pending Businesses</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="potential-earnings">0 UGX</div>
+                <div class="stat-label">Potential Earnings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="referral-count">0</div>
+                <div class="stat-label">Active Referrers</div>
+            </div>
+        </div>
+
         <!-- Search Section -->
         <div class="search-section">
             <div class="search-container">
-                <i class="fab fa-whatsapp"></i>
+                <i class="fas fa-search"></i>
                 <input type="text" id="search-input" placeholder="Search by WhatsApp number...">
             </div>
+            <button id="process-btn" class="btn-process">
+                <i class="fas fa-cogs"></i> Process Referrals
+            </button>
         </div>
 
         <!-- Summary Cards -->
@@ -572,6 +552,14 @@
                 <div class="summary-number professional" id="professional-referrals">0</div>
                 <div class="summary-label">Professional Referrals</div>
             </div>
+            <div class="summary-card">
+                <div class="summary-number premium" id="premium-referrals">0</div>
+                <div class="summary-label">Premium Referrals</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number enterprise" id="enterprise-referrals">0</div>
+                <div class="summary-label">Enterprise Referrals</div>
+            </div>
         </div>
 
         <!-- Referrals Table -->
@@ -580,10 +568,10 @@
                 <thead>
                     <tr>
                         <th>Referrer WhatsApp</th>
-                        <th>Referees</th>
-                        <th>First Referral Date</th>
-                        <th>Referrer Package</th>
-                        <th>Actions</th>
+                        <th>Referee WhatsApp</th>
+                        <th>Package Bought</th>
+                        <th>Amount Earned</th>
+                        <th>Time</th>
                     </tr>
                 </thead>
                 <tbody id="referrals-table-body">
@@ -598,27 +586,27 @@
     </div>
 
     <!-- Bottom Navigation -->
-  <!-- Bottom Navigation -->
-<div class="bottom-nav">
-    <a href="index.html" class="nav-item">
-        <i class="fas fa-building"></i>
-        <span>Businesses</span>
-    </a> 
-    <a href="payments.html" class="nav-item">
-        <i class="fas fa-money-bill-wave"></i>
-        <span>Payments</span>
-    </a>
-    <a href="referrals.html" class="nav-item active">
-        <i class="fas fa-users"></i>
-        <span>Referrals</span>
-    </a>
-    <a href="settings.html" class="nav-item">
-        <i class="fas fa-cog"></i>
-        <span>more</span>
-    </a>
-</div>
+    <div class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <i class="fas fa-building"></i>
+            <span>Businesses</span>
+        </a> 
+        <a href="payments.html" class="nav-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Payments</span>
+        </a>
+        <a href="referrals.html" class="nav-item active">
+            <i class="fas fa-users"></i>
+            <span>Referrals</span>
+        </a>
+        <a href="more.html" class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>more</span>
+        </a>
+    </div>
+    
     <script>
-        // Firebase configuration - Using your provided credentials
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
             authDomain: "oblinks-7fdb1.firebaseapp.com",
@@ -636,6 +624,13 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         const searchInput = document.getElementById('search-input');
         const referralsTableBody = document.getElementById('referrals-table-body');
+        const totalEarnings = document.getElementById('total-earnings');
+        const processBtn = document.getElementById('process-btn');
+        
+        // Stats elements
+        const pendingEarnings = document.getElementById('pending-earnings');
+        const potentialEarnings = document.getElementById('potential-earnings');
+        const referralCount = document.getElementById('referral-count');
         
         // Summary elements
         const totalReferrals = document.getElementById('total-referrals');
@@ -643,23 +638,39 @@
         const basicReferrals = document.getElementById('basic-referrals');
         const standardReferrals = document.getElementById('standard-referrals');
         const professionalReferrals = document.getElementById('professional-referrals');
+        const premiumReferrals = document.getElementById('premium-referrals');
+        const enterpriseReferrals = document.getElementById('enterprise-referrals');
         
-        // Modal elements
-        const referralModal = document.getElementById('referral-modal');
-        const modalReferrerWhatsapp = document.getElementById('modal-referrer-whatsapp');
-        const modalReferrerPackage = document.getElementById('modal-referrer-package');
-        const modalFirstDate = document.getElementById('modal-first-date');
-        const modalTotalReferrals = document.getElementById('modal-total-referrals');
-        const refereeListModal = document.getElementById('referee-list-modal');
-        const closeModalBtn = document.getElementById('close-modal');
+        // Commission rates and package prices
+        const commissionRates = {
+            Starter: 0.2,
+            Basic: 0.3,
+            Standard: 0.4,
+            Advanced: 0.5,
+            Professional: 0.6,
+            Premium: 0.7,
+            Enterprise: 0.8
+        };
+
+        const packagePrices = {
+            Basic: 30000,
+            Standard: 40000,
+            Advanced: 50000,
+            Professional: 100000,
+            Premium: 150000,
+            Enterprise: 200000
+        };
         
         // App State
-        let allReferrals = [];
+        let allEarnings = [];
+        let allBusinesses = [];
+        let allUsers = [];
         let currentSearch = '';
         
         // Set loading state
         function setLoading(isLoading) {
             loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+            processBtn.disabled = isLoading;
         }
         
         // Format date
@@ -683,139 +694,120 @@
             if (packageName.includes('starter')) return 'package-starter';
             if (packageName.includes('basic')) return 'package-basic';
             if (packageName.includes('standard')) return 'package-standard';
+            if (packageName.includes('advanced')) return 'package-professional';
             if (packageName.includes('professional')) return 'package-professional';
+            if (packageName.includes('premium')) return 'package-premium';
+            if (packageName.includes('enterprise')) return 'package-enterprise';
             return '';
         }
-        
-        // Load referrals from Firestore
-        function loadReferrals() {
-            setLoading(true);
-            
-            db.collection("referrals")
-                .orderBy("timestamp", "desc")
-                .get()
-                .then(querySnapshot => {
-                    allReferrals = [];
-                    querySnapshot.forEach(doc => {
-                        const referral = {
-                            id: doc.id,
-                            ...doc.data(),
-                            timestamp: doc.data().timestamp
-                        };
-                        allReferrals.push(referral);
-                    });
-                    
-                    renderReferrals();
-                    updateSummary();
-                    setLoading(false);
-                })
-                .catch(error => {
-                    console.error("Error getting referrals: ", error);
-                    referralsTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 30px; color: var(--danger);">
-                                <i class="fas fa-exclamation-circle"></i> Failed to load referrals: ${error.message}
-                            </td>
-                        </tr>
-                    `;
-                    setLoading(false);
-                });
+          // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'UGX',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
         }
         
-        // Render referrals to the table
-        function renderReferrals() {
-            // Group referrals by referrerWhatsapp
-            const referralsByReferrer = {};
+        // Load all necessary data
+        async function loadData() {
+            setLoading(true);
             
-            allReferrals.forEach(ref => {
-                const referrerKey = ref.referrerWhatsapp;
+            try {
+                // Load earnings
+                const earningsSnapshot = await db.collection("earnings")
+                    .orderBy("timestamp", "desc")
+                    .get();
                 
-                if (!referralsByReferrer[referrerKey]) {
-                    referralsByReferrer[referrerKey] = {
-                        referrerWhatsapp: ref.referrerWhatsapp,
-                        referrerPackage: ref.referrerPackage,
-                        referees: [],
-                        firstDate: ref.timestamp
+                allEarnings = [];
+                let totalAmount = 0;
+                
+                earningsSnapshot.forEach(doc => {
+                    const earning = {
+                        id: doc.id,
+                        ...doc.data(),
+                        timestamp: doc.data().timestamp
                     };
-                }
-                
-                // Add referee
-                referralsByReferrer[referrerKey].referees.push({
-                    whatsapp: ref.refereeWhatsapp,
-                    package: ref.refereePackage,
-                    date: ref.timestamp
+                    allEarnings.push(earning);
+                    totalAmount += earning.commission || earning.amountEarned || 0;
                 });
                 
-                // Update first date if earlier
-                if (ref.timestamp < referralsByReferrer[referrerKey].firstDate) {
-                    referralsByReferrer[referrerKey].firstDate = ref.timestamp;
-                }
-            });
-            
-            // Convert to array and sort by firstDate
-            const groupedReferrals = Object.values(referralsByReferrer);
-            groupedReferrals.sort((a, b) => b.firstDate - a.firstDate);
-            
+                // Format and display total earnings
+                totalEarnings.textContent = formatCurrency(totalAmount);
+                
+                // Load businesses
+                const businessesSnapshot = await db.collection("businesses").get();
+                allBusinesses = businessesSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Load users
+                const usersSnapshot = await db.collection("users").get();
+                allUsers = usersSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Update UI
+                renderEarnings();
+                updateSummary();
+                updateStats();
+            } catch (error) {
+                console.error("Error loading data: ", error);
+                referralsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px; color: var(--danger);">
+                            <i class="fas fa-exclamation-circle"></i> Failed to load data: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        // Render earnings to the table
+        function renderEarnings() {
             let tableHTML = '';
             
             // Filter based on search
-            const filteredReferrals = groupedReferrals.filter(ref => {
+            const filteredEarnings = allEarnings.filter(earning => {
                 if (!currentSearch) return true;
                 
                 const searchLower = currentSearch.toLowerCase();
-                const matchesReferrer = ref.referrerWhatsapp?.toLowerCase().includes(searchLower) || false;
-                
-                // Check if any referee matches
-                const matchesReferee = ref.referees.some(r => 
-                    r.whatsapp?.toLowerCase().includes(searchLower)
-                );
+                const matchesReferrer = earning.referrerWhatsapp?.toLowerCase().includes(searchLower) || false;
+                const matchesReferee = earning.refereeWhatsapp?.toLowerCase().includes(searchLower) || false;
                 
                 return matchesReferrer || matchesReferee;
             });
             
-            if (filteredReferrals.length === 0) {
+            if (filteredEarnings.length === 0) {
                 tableHTML = `
                     <tr>
                         <td colspan="5" style="text-align: center; padding: 30px;">
-                            <i class="fas fa-users"></i> No referrals found
+                            <i class="fas fa-users-slash"></i> No referrals found
                         </td>
                     </tr>
                 `;
             } else {
-                filteredReferrals.forEach(ref => {
-                    const packageClass = getPackageClass(ref.referrerPackage);
+                filteredEarnings.forEach(earning => {
+                    const packageName = earning.package || earning.packageBought || 'N/A';
+                    const packageClass = getPackageClass(packageName);
+                    const amountEarned = earning.commission || earning.amountEarned || 0;
                     
                     tableHTML += `
                         <tr>
-                            <td>${ref.referrerWhatsapp || 'N/A'}</td>
-                            <td>
-                                <div class="referee-list">
-                                    ${ref.referees.map(r => `
-                                        <div class="referee-item">
-                                            <div class="referee-info">
-                                                <strong>${r.whatsapp || 'N/A'}</strong>
-                                                <div class="referee-date">${formatDate(r.date) || 'N/A'}</div>
-                                            </div>
-                                            <span class="referee-package ${getPackageClass(r.package)}">
-                                                ${r.package || 'N/A'}
-                                            </span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </td>
-                            <td>${formatDate(ref.firstDate) || 'N/A'}</td>
+                            <td>${earning.referrerWhatsapp || 'N/A'}</td>
+                            <td>${earning.refereeWhatsapp || 'N/A'}</td>
                             <td>
                                 <span class="referrer-package ${packageClass}">
-                                    ${ref.referrerPackage || 'N/A'}
+                                    ${packageName}
                                 </span>
                             </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="action-btn btn-view" onclick="viewReferralDetails('${ref.referrerWhatsapp}')">
-                                        <i class="fas fa-eye"></i> Details
-                                    </button>
-                                </div>
-                            </td>
+                            <td class="amount-earned">${formatCurrency(amountEarned)}</td>
+                            <td>${formatDate(earning.timestamp) || 'N/A'}</td>
                         </tr>
                     `;
                 });
@@ -824,96 +816,199 @@
             referralsTableBody.innerHTML = tableHTML;
         }
         
-        // View referral details
-        function viewReferralDetails(referrerWhatsapp) {
-            // Find all referrals for this referrer
-            const referralsForReferrer = allReferrals.filter(
-                r => r.referrerWhatsapp === referrerWhatsapp
-            );
+  // Update summary cards
+        function updateSummary() {
+            totalReferrals.textContent = allEarnings.length;
             
-            if (referralsForReferrer.length === 0) return;
+            starterReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('starter');
+            }).length;
             
-            // Find the first referral date
-            const firstDate = referralsForReferrer.reduce((min, r) => 
-                r.timestamp < min ? r.timestamp : min, 
-                referralsForReferrer[0].timestamp
-            );
+            basicReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('basic');
+            }).length;
             
-            modalReferrerWhatsapp.textContent = referrerWhatsapp || 'N/A';
-            modalReferrerPackage.textContent = referralsForReferrer[0].referrerPackage || 'N/A';
-            modalFirstDate.textContent = formatDate(firstDate) || 'N/A';
-            modalTotalReferrals.textContent = referralsForReferrer.length;
+            standardReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('standard');
+            }).length;
             
-            // Build referee list for modal
-            refereeListModal.innerHTML = referralsForReferrer.map(r => `
-                <div class="referee-item-modal">
-                    <div class="referee-info-modal">
-                        <strong>${r.refereeWhatsapp || 'N/A'}</strong>
-                        <div class="referee-date">${formatDate(r.timestamp) || 'N/A'}</div>
-                    </div>
-                    <span class="referee-package ${getPackageClass(r.refereePackage)}">
-                        ${r.refereePackage || 'N/A'}
-                    </span>
-                </div>
-            `).join('');
+            professionalReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('professional') || pkg.includes('advanced');
+            }).length;
             
-            // Show modal
-            referralModal.style.display = 'flex';
+            premiumReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('premium');
+            }).length;
+            
+            enterpriseReferrals.textContent = allEarnings.filter(e => {
+                const pkg = (e.package || e.packageBought || '').toLowerCase();
+                return pkg.includes('enterprise');
+            }).length;
         }
         
-        // Update summary cards
-        function updateSummary() {
-            totalReferrals.textContent = allReferrals.length;
+        // Update stats bar
+        function updateStats() {
+            // Count businesses that haven't been processed
+            const processedBusinessIds = allEarnings.map(e => e.businessId);
+          const pendingBusinesses = allBusinesses.filter(b => 
+    b.package && b.package !== "Starter" && 
+    !processedBusinessIds.includes(b.id)
+);
+
+pendingEarnings.textContent = pendingBusinesses.length;
+
+// Calculate potential earnings
+let potential = 0;
+pendingBusinesses.forEach(business => {
+    const pkg = business.package;
+    if (pkg && packagePrices[pkg]) {
+        potential += packagePrices[pkg];
+    }
+});
+            potentialEarnings.textContent = formatCurrency(potential);
             
-            starterReferrals.textContent = allReferrals.filter(r => 
-                r.refereePackage && r.refereePackage.toLowerCase().includes('starter')
-            ).length;
+            // Count active referrers
+            const referrers = new Set();
+            allEarnings.forEach(e => {
+                if (e.referrerId) {
+                    referrers.add(e.referrerId);
+                }
+            });
+            referralCount.textContent = referrers.size;
+        }
+        
+        // Process referral earnings
+        async function processReferralEarnings() {
+            setLoading(true);
             
-            basicReferrals.textContent = allReferrals.filter(r => 
-                r.refereePackage && r.refereePackage.toLowerCase().includes('basic')
-            ).length;
-            
-            standardReferrals.textContent = allReferrals.filter(r => 
-                r.refereePackage && r.refereePackage.toLowerCase().includes('standard')
-            ).length;
-            
-            professionalReferrals.textContent = allReferrals.filter(r => 
-                r.refereePackage && r.refereePackage.toLowerCase().includes('professional')
-            ).length;
+            try {
+                // Get businesses that haven't been processed
+                const processedBusinessIds = allEarnings.map(e => e.businessId);
+                const pendingBusinesses = allBusinesses.filter(b => 
+                    b.package && b.package !== "Starter" && 
+                    !processedBusinessIds.includes(b.id)
+                );
+                
+                let processedCount = 0;
+                let skippedCount = 0;
+                
+                for (const business of pendingBusinesses) {
+                    const businessId = business.id;
+                    
+                    // Skip if no createdBy (referee ID)
+                    if (!business.createdBy) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    // Get referee user
+                    const referee = allUsers.find(u => u.id === business.createdBy);
+                    if (!referee) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    // Skip if no referrer
+                    if (!referee.referrerUserId) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    // Get referrer user
+                    const referrer = allUsers.find(u => u.id === referee.referrerUserId);
+                    if (!referrer) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    // Calculate commission
+                    const packageName = business.package;
+                    const amountPaid = packagePrices[packageName] || 0;
+                    const referrerPackage = referrer.package || "Starter";
+                    const commissionRate = commissionRates[referrerPackage] || 0;
+                    const commission = Math.round(amountPaid * commissionRate);
+                    
+                    // Create earning record
+                    await db.collection("earnings").add({
+                        businessId,
+                        referrerId: referrer.id,
+                        refereeId: referee.id,
+                        package: packageName,
+                        amountPaid,
+                        commission,
+                        refereeWhatsapp: referee.whatsapp || "",
+                        referrerWhatsapp: referrer.whatsapp || "",
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Update referrer's total earnings
+                    await db.collection("users").doc(referrer.id).update({
+                        totalEarnings: firebase.firestore.FieldValue.increment(commission),
+                        referralCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    
+                    // Add to local state to update UI
+                    allEarnings.push({
+                        businessId,
+                        referrerId: referrer.id,
+                        refereeId: referee.id,
+                        package: packageName,
+                        amountPaid,
+                        commission,
+                        refereeWhatsapp: referee.whatsapp || "",
+                        referrerWhatsapp: referrer.whatsapp || "",
+                        timestamp: new Date()
+                    });
+                    
+                    processedCount++;
+                    console.log(`Awarded ${commission} UGX to ${referrer.whatsapp}`);
+                }
+                
+                alert(`✅ Referral processing completed!\nProcessed: ${processedCount}\nSkipped: ${skippedCount}`);
+                
+                // Update UI
+                const totalAmount = allEarnings.reduce((sum, e) => sum + (e.commission || e.amountEarned || 0), 0);
+                totalEarnings.textContent = formatCurrency(totalAmount);
+                renderEarnings();
+                updateSummary();
+                updateStats();
+            } catch (error) {
+                console.error("Error processing referrals: ", error);
+                alert(`❌ Error processing referrals: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
         }
         
         // Initialize the referrals dashboard
         function initReferralsDashboard() {
-            // Load referrals
-            loadReferrals();
+            // Load data
+            loadData();
             
             // Setup search
             searchInput.addEventListener('input', (e) => {
-                currentSearch = e.target.value.toLowerCase();
-                renderReferrals();
+                currentSearch = e.target.value;
+                renderEarnings();
             });
             
-            // Close modal
-            closeModalBtn.addEventListener('click', () => {
-                referralModal.style.display = 'none';
-            });
-            
-            // Close modal when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === referralModal) {
-                    referralModal.style.display = 'none';
-                }
-            });
+            // Setup process button
+            processBtn.addEventListener('click', processReferralEarnings);
         }
         
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initReferralsDashboard);
         
+        // Authentication check
         firebase.auth().onAuthStateChanged(user => {
-  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
-    window.location.href = "login.html";
-  }
-});
+            if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+                window.location.href = "login.html";
+            }
+        });
     </script>
 </body>
 </html>
