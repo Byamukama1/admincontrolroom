@@ -709,15 +709,25 @@
       });
     });
     
-    // Reset user password
-    resetPasswordBtn.addEventListener('click', () => {
-      const email = document.getElementById('userEmail').value;
-      const newPassword = document.getElementById('newPassword').value;
-      
-      if (!email || !newPassword) {
-        showToast('Please fill all fields', false);
-        return;
-      }
+   // Reset user password
+resetPasswordBtn.addEventListener('click', () => {
+  const email = document.getElementById('userEmail').value.trim();
+
+  if (!email) {
+    showToast('Please enter the user\'s email', false);
+    return;
+  }
+
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(() => {
+      showToast(`✅ Reset email sent to ${email}`);
+      document.getElementById('userEmail').value = '';
+    })
+    .catch((error) => {
+      console.error("Error sending reset email:", error);
+      showToast('❌ Error: ' + error.message, false);
+    });
+});
       
       // Simulate password reset for production
       showToast(`Password reset for ${email} processed`);
