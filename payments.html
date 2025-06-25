@@ -262,7 +262,7 @@
             background: rgba(220, 53, 69, 0.1);
             color: #b91c1c;
         }
-                .status-withdrawal {
+        .status-withdrawal {
             background: rgba(139, 92, 246, 0.1);
             color: #5b21b6;
         }
@@ -271,8 +271,7 @@
             display: flex;
             gap: 8px;
         }
-
-        .action-btn {
+                .action-btn {
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 13px;
@@ -315,7 +314,7 @@
             color: white;
         }
 
-        /* Bottom Navigation */
+   /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -498,6 +497,24 @@
                 font-size: 13px;
             }
         }
+        
+        /* Type indicators */
+        .payment-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .type-listing {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+        
+        .type-withdrawal {
+            background: rgba(139, 92, 246, 0.1);
+            color: #5b21b6;
+        }
     </style>
 </head>
 <body>
@@ -510,11 +527,11 @@
     <div class="modal" id="payment-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Payment Details</h3>
+                <h3 id="modal-header-title">Payment Details</h3>
                 <button class="close-modal" id="close-modal">&times;</button>
             </div>
             <div class="modal-body" id="modal-body">
-                <div class="payment-detail">
+                <div class="payment-detail" id="modal-business-row">
                     <div class="payment-label">Business:</div>
                     <div class="payment-value" id="modal-business">-</div>
                 </div>
@@ -525,6 +542,10 @@
                 <div class="payment-detail">
                     <div class="payment-label">Payment Phone:</div>
                     <div class="payment-value" id="modal-payment-phone">-</div>
+                </div>
+                <div class="payment-detail" id="modal-method-row">
+                    <div class="payment-label">Method:</div>
+                    <div class="payment-value" id="modal-method">-</div>
                 </div>
                 <div class="payment-detail">
                     <div class="payment-label">Type:</div>
@@ -544,12 +565,12 @@
                     <div class="payment-label">Date:</div>
                     <div class="payment-value" id="modal-date">-</div>
                 </div>
-                <div class="payment-detail">
+                <div class="payment-detail" id="modal-package-row">
                     <div class="payment-label">Package:</div>
                     <div class="payment-value" id="modal-package">-</div>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" id="modal-footer">
                 <button class="action-btn btn-approve" id="modal-approve-btn">
                     <i class="fas fa-check"></i> Approve Payment
                 </button>
@@ -586,8 +607,8 @@
                 <button class="filter-btn" data-filter="withdrawal">Withdrawals</button>
             </div>
         </div>
-
-         <!-- Summary Cards -->
+        
+        <!-- Summary Cards -->
         <div class="summary-container">
             <div class="summary-card">
                 <div class="summary-number total" id="total-payments">0</div>
@@ -634,344 +655,473 @@
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-    <div class="nav-item" onclick="window.location.href='index.html'">
-        <i class="fas fa-building"></i>
-        <span>Businesses</span>
-    </div> 
-    <div class="nav-item" onclick="window.location.href='payments.html'">
-        <i class="fas fa-money-bill-wave"></i>
-        <span>Payments</span>
+        <div class="nav-item" onclick="window.location.href='index.html'">
+            <i class="fas fa-building"></i>
+            <span>Businesses</span>
+        </div> 
+        <div class="nav-item active" onclick="window.location.href='payments.html'">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Payments</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='referrals.html'">
+            <i class="fas fa-users"></i>
+            <span>Referrals</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='more.html.html'">
+            <i class="fas fa-cog"></i>
+            <span>More</span>
+        </div>
     </div>
-    <div class="nav-item active" onclick="window.location.href='referrals.html'">
-        <i class="fas fa-users"></i>
-        <span>Referrals</span>
-    </div>
-    <div class="nav-item" onclick="window.location.href='settings.html'">
-        <i class="fas fa-cog"></i>
-        <span>more</span>
-    </div>
-</div>
 
+ <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
+            authDomain: "oblinks-7fdb1.firebaseapp.com",
+            projectId: "oblinks-7fdb1",
+            storageBucket: "oblinks-7fdb1.appspot.com",
+            messagingSenderId: "587017639779",
+            appId: "1:587017639779:web:d11b60f40f431cfc202556"
+        };
 
-<script>
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCGVVpcWS9ae1DH1J8qoaK1TwnSX_W5FkQ",
-  authDomain: "oblinks-7fdb1.firebaseapp.com",
-  projectId: "oblinks-7fdb1",
-  storageBucket: "oblinks-7fdb1.appspot.com",
-  messagingSenderId: "587017639779",
-  appId: "1:587017639779:web:d11b60f40f431cfc202556"
-};
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+        // DOM Elements
+        const paymentsTableBody = document.getElementById('payments-table-body');
+        const searchInput = document.getElementById('search-input');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const paymentModal = document.getElementById('payment-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const totalPaymentsEl = document.getElementById('total-payments');
+        const pendingPaymentsEl = document.getElementById('pending-payments');
+        const totalWithdrawnEl = document.getElementById('total-withdrawn');
+        const pendingWithdrawalsEl = document.getElementById('pending-withdrawals');
 
-// DOM Elements
-const paymentsTableBody = document.getElementById('payments-table-body');
-const searchInput = document.getElementById('search-input');
-const filterBtns = document.querySelectorAll('.filter-btn');
-const paymentModal = document.getElementById('payment-modal');
-const closeModalBtn = document.getElementById('close-modal');
-const loadingOverlay = document.getElementById('loading-overlay');
-const totalPaymentsEl = document.getElementById('total-payments');
-const pendingPaymentsEl = document.getElementById('pending-payments');
-const totalWithdrawnEl = document.getElementById('total-withdrawn');
-const pendingWithdrawalsEl = document.getElementById('pending-withdrawals');
+        // App State
+        let allPayments = [];
+        let allWithdrawals = [];
+        let currentSearch = '';
+        let currentFilter = 'all';
 
-// App State
-let allPayments = [];
-let currentSearch = '';
-let currentFilter = 'all';
-
-// Set loading state
-function setLoading(isLoading) {
-  loadingOverlay.style.display = isLoading ? 'flex' : 'none';
-}
-
-// Update summary cards
-function updateSummary() {
-  const total = allPayments.length;
-  const pending = allPayments.filter(p => p.status === 'pending').length;
-  const withdrawn = allPayments
-    .filter(p => p.type === 'withdrawal' && p.status === 'approved')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const pendingWithdrawals = allPayments
-    .filter(p => p.type === 'withdrawal' && p.status === 'pending').length;
-
-  totalPaymentsEl.textContent = total;
-  pendingPaymentsEl.textContent = pending;
-  totalWithdrawnEl.textContent = withdrawn.toLocaleString();
-  pendingWithdrawalsEl.textContent = pendingWithdrawals;
-}
-
-// Render payments table
-function renderPayments() {
-  let filteredPayments = allPayments;
-  
-  // Apply filter
-  if (currentFilter !== 'all') {
-    filteredPayments = filteredPayments.filter(p => 
-      currentFilter === 'withdrawal' 
-        ? p.type === 'withdrawal' 
-        : p.status === currentFilter
-    );
-  }
-  
-  // Apply search
-  if (currentSearch) {
-    const searchTerm = currentSearch.toLowerCase();
-    filteredPayments = filteredPayments.filter(p => 
-      (p.whatsappNumber && p.whatsappNumber.toLowerCase().includes(searchTerm)) ||
-      (p.paymentPhone && p.paymentPhone.toLowerCase().includes(searchTerm)) ||
-      (p.businessTitle && p.businessTitle.toLowerCase().includes(searchTerm))
-    );
-  }
-  
-  // Render table
-  let tableHTML = '';
-  
-  if (filteredPayments.length === 0) {
-    tableHTML = `
-      <tr>
-        <td colspan="7" style="text-align: center; padding: 30px;">
-          No payments found
-        </td>
-      </tr>
-    `;
-  } else {
-    filteredPayments.forEach(payment => {
-      const date = payment.timestamp ? new Date(payment.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-      const amount = payment.amount ? payment.amount.toLocaleString() : '0';
-      
-      let statusClass = '';
-      if (payment.status === 'pending') statusClass = 'status-pending';
-      else if (payment.status === 'approved') statusClass = 'status-approved';
-      else if (payment.status === 'rejected') statusClass = 'status-rejected';
-      
-      tableHTML += `
-        <tr>
-          <td>${payment.type || 'Listing'}</td>
-          <td>${payment.whatsappNumber || 'N/A'}</td>
-          <td>${payment.paymentPhone || 'N/A'}</td>
-          <td>${amount} UGX</td>
-          <td>${date}</td>
-          <td><span class="status ${statusClass}">${payment.status}</span></td>
-          <td>
-            <div class="action-buttons">
-              <button class="action-btn btn-view" data-id="${payment.id}">
-                <i class="fas fa-eye"></i> View
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
-  }
-  
-  paymentsTableBody.innerHTML = tableHTML;
-  
-  // Add event listeners to view buttons
-  document.querySelectorAll('.btn-view').forEach(btn => {
-    btn.addEventListener('click', () => showPaymentDetails(btn.dataset.id));
-  });
-}
-
-// Show payment details modal
-function showPaymentDetails(paymentId) {
-  const payment = allPayments.find(p => p.id === paymentId);
-  if (!payment) return;
-  
-  // Format date
-  const date = payment.timestamp ? new Date(payment.timestamp.seconds * 1000).toLocaleString() : 'N/A';
-  
-  // Update modal content
-  document.getElementById('modal-business').textContent = payment.businessTitle || 'N/A';
-  document.getElementById('modal-whatsapp').textContent = payment.whatsappNumber || 'N/A';
-  document.getElementById('modal-payment-phone').textContent = payment.paymentPhone || 'N/A';
-  document.getElementById('modal-type').textContent = payment.type || 'Business Listing';
-  document.getElementById('modal-status').textContent = payment.status || 'N/A';
-  document.getElementById('modal-amount').textContent = payment.amount ? payment.amount.toLocaleString() : '0';
-  document.getElementById('modal-date').textContent = date;
-  document.getElementById('modal-package').textContent = payment.packageName || 'N/A';
-  
-  // Update action buttons
-  const approveBtn = document.getElementById('modal-approve-btn');
-  const rejectBtn = document.getElementById('modal-reject-btn');
-  
-  approveBtn.onclick = () => approvePayment(paymentId);
-  rejectBtn.onclick = () => rejectPayment(paymentId);
-  
-  // Show modal
-  paymentModal.style.display = 'flex';
-}
-
-// Approve payment and publish business
-async function approvePayment(paymentId) {
-  setLoading(true);
-
-  try {
-    // Update payment status
-    await db.collection("payments").doc(paymentId).update({
-      status: "approved"
-    });
-
-    // Update local state
-    const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
-    if (paymentIndex !== -1) {
-      allPayments[paymentIndex].status = "approved";
-    }
-
-    const payment = allPayments[paymentIndex];
-    const phone = payment ? payment.paymentPhone : null;
-
-    if (phone) {
-      const snapshot = await db.collection("pendingBusinesses")
-        .where("paymentPhone", "==", phone)
-        .get();
-
-      if (!snapshot.empty) {
-        for (const doc of snapshot.docs) {
-          const businessData = doc.data();
-          const pendingId = doc.id;
-
-          console.log("Original pending business ID:", pendingId);
-
-          // ✅ Add to businesses with same ID as pending business
-          await db.collection("businesses").doc(pendingId).set(businessData);
-          console.log("✅ Business published with ID:", pendingId);
-
-          // ⚠️ IMPORTANT: Items are already stored with this businessId
-          // No need to update them
-          
-          // ✅ Delete pending business
-          await db.collection("pendingBusinesses").doc(pendingId).delete();
-          console.log("✅ Pending business deleted");
+        // Set loading state
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
         }
-      } else {
-        console.warn("⚠️ No pending business found for phone:", phone);
-      }
-    }
 
-    // Update UI
-    renderPayments();
-    updateSummary();
-    setLoading(false);
-    paymentModal.style.display = 'none';
-    alert("✅ Payment approved and business published!");
+        // Update summary cards
+        function updateSummary() {
+            // Business payments
+            const totalPayments = allPayments.length;
+            const pendingPayments = allPayments.filter(p => p.status === 'pending').length;
+            
+            // Withdrawals
+            const totalWithdrawn = allWithdrawals
+                .filter(w => w.status === 'approved')
+                .reduce((sum, w) => sum + w.amount, 0);
+                
+            const pendingWithdrawals = allWithdrawals
+                .filter(w => w.status === 'pending').length;
 
-  } catch (error) {
-    console.error("Error approving payment: ", error);
-    alert("❌ Failed to approve payment: " + error.message);
-    setLoading(false);
-  }
-}
+            totalPaymentsEl.textContent = totalPayments;
+            pendingPaymentsEl.textContent = pendingPayments;
+            totalWithdrawnEl.textContent = totalWithdrawn.toLocaleString();
+            pendingWithdrawalsEl.textContent = pendingWithdrawals;
+        }
 
-// Reject payment
-function rejectPayment(paymentId) {
-  setLoading(true);
-  
-  db.collection("payments").doc(paymentId).update({
-    status: "rejected"
-  })
-  .then(() => {
-    const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
-    if (paymentIndex !== -1) {
-      allPayments[paymentIndex].status = "rejected";
-    }
-    
-    renderPayments();
-    updateSummary();
-    setLoading(false);
-    paymentModal.style.display = 'none';
-    alert("Payment rejected");
-  })
-  .catch(error => {
-    console.error("Error rejecting payment: ", error);
-    alert("Failed to reject payment: " + error.message);
-    setLoading(false);
-  });
-}
+        // Render payments table
+        function renderPayments() {
+            // Combine payments and withdrawals
+            const combinedRecords = [...allPayments, ...allWithdrawals];
+            
+            let filteredRecords = combinedRecords;
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'withdrawal') {
+                    filteredRecords = filteredRecords.filter(r => r.type === 'withdrawal');
+                } else {
+                    filteredRecords = filteredRecords.filter(r => r.status === currentFilter);
+                }
+            }
+            
+            // Apply search
+            if (currentSearch) {
+                const searchTerm = currentSearch.toLowerCase();
+                filteredRecords = filteredRecords.filter(r => 
+                    (r.whatsappNumber && r.whatsappNumber.toLowerCase().includes(searchTerm)) ||
+                    (r.paymentPhone && r.paymentPhone.toLowerCase().includes(searchTerm)) ||
+                    (r.businessTitle && r.businessTitle.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // Sort by timestamp
+            filteredRecords.sort((a, b) => {
+                const aTime = a.timestamp ? a.timestamp.seconds : 0;
+                const bTime = b.timestamp ? b.timestamp.seconds : 0;
+                return bTime - aTime;
+            });
+            
+            // Render table
+            let tableHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                tableHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            No records found
+                        </td>
+                    </tr>
+                `;
+            } else {
+                filteredRecords.forEach(record => {
+                    const date = record.timestamp ? new Date(record.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                    const amount = record.amount ? record.amount.toLocaleString() : '0';
+                    
+                    let statusClass = '';
+                    if (record.status === 'pending') statusClass = 'status-pending';
+                    else if (record.status === 'approved') statusClass = 'status-approved';
+                    else if (record.status === 'rejected') statusClass = 'status-rejected';
+                    
+                    const typeClass = record.type === 'withdrawal' ? 'type-withdrawal' : 'type-listing';
+                    const typeText = record.type === 'withdrawal' ? 'Withdrawal' : 'Listing';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td><span class="payment-type ${typeClass}">${typeText}</span></td>
+                            <td>${record.whatsappNumber || 'N/A'}</td>
+                            <td>${record.paymentPhone || 'N/A'}</td>
+                            <td>${amount} UGX</td>
+                            <td>${date}</td>
+                            <td><span class="status ${statusClass}">${record.status}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn btn-view" data-id="${record.id}" data-type="${record.type}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            paymentsTableBody.innerHTML = tableHTML;
+                // Add event listeners to view buttons
+            document.querySelectorAll('.btn-view').forEach(btn => {
+                btn.addEventListener('click', () => showRecordDetails(btn.dataset.id, btn.dataset.type));
+            });
+        }
 
-// Load payments
-function loadPayments() {
-  setLoading(true);
+ // Show payment/withdrawal details modal
+        function showRecordDetails(recordId, recordType) {
+            let record;
+            
+            if (recordType === 'withdrawal') {
+                record = allWithdrawals.find(w => w.id === recordId);
+            } else {
+                record = allPayments.find(p => p.id === recordId);
+            }
+            
+            if (!record) return;
+            
+            // Format date
+            const date = record.timestamp ? new Date(record.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+            
+            // Update modal content
+            document.getElementById('modal-header-title').textContent = 
+                recordType === 'withdrawal' ? 'Withdrawal Details' : 'Payment Details';
+                
+            document.getElementById('modal-business').textContent = record.businessTitle || 'N/A';
+            document.getElementById('modal-whatsapp').textContent = record.whatsappNumber || 'N/A';
+            document.getElementById('modal-payment-phone').textContent = record.paymentPhone || 'N/A';
+            document.getElementById('modal-type').textContent = record.type === 'withdrawal' ? 'Withdrawal' : 'Listing';
+            document.getElementById('modal-status').textContent = record.status || 'N/A';
+            document.getElementById('modal-amount').textContent = record.amount ? record.amount.toLocaleString() : '0';
+            document.getElementById('modal-date').textContent = date;
+            document.getElementById('modal-package').textContent = record.packageName || 'N/A';
+            document.getElementById('modal-method').textContent = record.method || 'N/A';
+            
+            // Show/hide fields based on type
+            if (recordType === 'withdrawal') {
+                document.getElementById('modal-business-row').style.display = 'none';
+                document.getElementById('modal-package-row').style.display = 'none';
+                document.getElementById('modal-method-row').style.display = 'flex';
+            } else {
+                document.getElementById('modal-business-row').style.display = 'flex';
+                document.getElementById('modal-package-row').style.display = 'flex';
+                document.getElementById('modal-method-row').style.display = 'none';
+            }
+            
+            // Update action buttons
+            const approveBtn = document.getElementById('modal-approve-btn');
+            const rejectBtn = document.getElementById('modal-reject-btn');
+            
+            if (recordType === 'withdrawal') {
+                approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve Withdrawal';
+                approveBtn.onclick = () => approveWithdrawal(recordId);
+                rejectBtn.onclick = () => rejectWithdrawal(recordId);
+            } else {
+                approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve Payment';
+                approveBtn.onclick = () => approvePayment(recordId);
+                rejectBtn.onclick = () => rejectPayment(recordId);
+            }
+            
+            // Show modal
+            paymentModal.style.display = 'flex';
+        }
 
-  db.collection("payments")
-    .orderBy("timestamp", "desc")
-    .get()
-    .then(querySnapshot => {
-      allPayments = [];
-      querySnapshot.forEach(doc => {
-        allPayments.push({
-          id: doc.id,
-          ...doc.data(),
-          // Convert Firestore timestamp to JS date
-          timestamp: doc.data().timestamp 
+        // Approve payment and publish business
+        async function approvePayment(paymentId) {
+            setLoading(true);
+
+            try {
+                // Update payment status
+                await db.collection("payments").doc(paymentId).update({
+                    status: "approved"
+                });
+
+                // Update local state
+                const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+                if (paymentIndex !== -1) {
+                    allPayments[paymentIndex].status = "approved";
+                }
+
+                const payment = allPayments[paymentIndex];
+                const phone = payment ? payment.paymentPhone : null;
+
+                if (phone) {
+                    const snapshot = await db.collection("pendingBusinesses")
+                        .where("paymentPhone", "==", phone)
+                        .get();
+
+                    if (!snapshot.empty) {
+                        for (const doc of snapshot.docs) {
+                            const businessData = doc.data();
+                            const pendingId = doc.id;
+
+                            // Add to businesses with same ID as pending business
+                            await db.collection("businesses").doc(pendingId).set(businessData);
+
+                            // Delete pending business
+                            await db.collection("pendingBusinesses").doc(pendingId).delete();
+                        }
+                    }
+                }
+
+                // Update UI
+                renderPayments();
+                updateSummary();
+                setLoading(false);
+                paymentModal.style.display = 'none';
+                alert("✅ Payment approved and business published!");
+
+            } catch (error) {
+                console.error("Error approving payment: ", error);
+                alert("❌ Failed to approve payment: " + error.message);
+                setLoading(false);
+            }
+        }
+
+        // Reject payment
+        function rejectPayment(paymentId) {
+            setLoading(true);
+            
+            db.collection("payments").doc(paymentId).update({
+                status: "rejected"
+            })
+            .then(() => {
+                const paymentIndex = allPayments.findIndex(p => p.id === paymentId);
+                if (paymentIndex !== -1) {
+                    allPayments[paymentIndex].status = "rejected";
+                }
+                
+                renderPayments();
+                updateSummary();
+                setLoading(false);
+                paymentModal.style.display = 'none';
+                alert("Payment rejected");
+            })
+            .catch(error => {
+                console.error("Error rejecting payment: ", error);
+                alert("Failed to reject payment: " + error.message);
+                setLoading(false);
+            });
+        }
+
+        // Approve withdrawal
+        async function approveWithdrawal(withdrawalId) {
+            setLoading(true);
+            
+            try {
+                // Get withdrawal record
+                const withdrawal = allWithdrawals.find(w => w.id === withdrawalId);
+                if (!withdrawal) return;
+                
+                // Update withdrawal status
+                await db.collection("withdrawals").doc(withdrawalId).update({
+                    status: "approved"
+                });
+                
+                // Update local state
+                const withdrawalIndex = allWithdrawals.findIndex(w => w.id === withdrawalId);
+                if (withdrawalIndex !== -1) {
+                    allWithdrawals[withdrawalIndex].status = "approved";
+                }
+                
+                // Send notification
+                const notification = {
+                    userId: withdrawal.userId,
+                    message: `Your withdrawal of ${withdrawal.amount} UGX has been approved.`,
+                    time: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                    type: 'withdrawal'
+                };
+                
+                await db.collection("notifications").add(notification);
+                
+                // Update UI
+                renderPayments();
+                updateSummary();
+                setLoading(false);
+                paymentModal.style.display = 'none';
+                alert("✅ Withdrawal approved!");
+                
+            } catch (error) {
+                console.error("Error approving withdrawal: ", error);
+                alert("❌ Failed to approve withdrawal: " + error.message);
+                setLoading(false);
+            }
+        }
+
+        // Reject withdrawal
+        function rejectWithdrawal(withdrawalId) {
+            setLoading(true);
+            
+            db.collection("withdrawals").doc(withdrawalId).update({
+                status: "rejected"
+            })
+            .then(() => {
+                const withdrawalIndex = allWithdrawals.findIndex(w => w.id === withdrawalId);
+                if (withdrawalIndex !== -1) {
+                    allWithdrawals[withdrawalIndex].status = "rejected";
+                }
+                
+                renderPayments();
+                updateSummary();
+                setLoading(false);
+                paymentModal.style.display = 'none';
+                alert("Withdrawal rejected");
+            })
+            .catch(error => {
+                console.error("Error rejecting withdrawal: ", error);
+                alert("Failed to reject withdrawal: " + error.message);
+                setLoading(false);
+            });
+        }
+
+    // Load payments and withdrawals
+        async function loadRecords() {
+            setLoading(true);
+
+            try {
+                // Load payments
+                const paymentsSnapshot = await db.collection("payments")
+                    .orderBy("timestamp", "desc")
+                    .get();
+                    
+                allPayments = paymentsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        type: 'listing',
+                        ...data,
+                        timestamp: data.timestamp,
+                        amount: Number(data.amount) || 0
+                    };
+                });
+
+                // Load withdrawals
+                const withdrawalsSnapshot = await db.collection("withdrawals")
+                    .orderBy("timestamp", "desc")
+                    .get();
+                    
+                allWithdrawals = withdrawalsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        type: 'withdrawal',
+                        whatsappNumber: data.whatsapp,
+                        paymentPhone: data.details,
+                        amount: Number(data.amount) || 0,
+                        status: data.status,
+                        method: data.method,
+                        userId: data.userId,
+                        timestamp: data.timestamp
+                    };
+                });
+
+                renderPayments();
+                updateSummary();
+                setLoading(false);
+            } catch (error) {
+                console.error("Error getting records: ", error);
+                paymentsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
+                            <i class="fas fa-exclamation-circle"></i> Failed to load records: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                setLoading(false);
+            }
+        }
+
+        // Initialize the dashboard
+        function initDashboard() {
+            // Load records
+            loadRecords();
+
+            // Setup search
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase();
+                renderPayments();
+            });
+
+            // Setup filter buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    renderPayments();
+                });
+            });
+
+            // Close modal
+            closeModalBtn.addEventListener('click', () => {
+                paymentModal.style.display = 'none';
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === paymentModal) {
+                    paymentModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Admin authentication check
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
+                window.location.href = "login.html";
+            }
         });
-      });
-
-      renderPayments();
-      updateSummary();
-      setLoading(false);
-    })
-    .catch(error => {
-      console.error("Error getting payments: ", error);
-      paymentsTableBody.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 30px; color: var(--danger);">
-            <i class="fas fa-exclamation-circle"></i> Failed to load payments: ${error.message}
-          </td>
-        </tr>
-      `;
-      setLoading(false);
-    });
-}
-
-// Initialize the payments dashboard
-function initPaymentsDashboard() {
-  // Load payments
-  loadPayments();
-
-  // Setup search
-  searchInput.addEventListener('input', (e) => {
-    currentSearch = e.target.value.toLowerCase();
-    renderPayments();
-  });
-
-  // Setup filter buttons
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      renderPayments();
-    });
-  });
-
-  // Close modal
-  closeModalBtn.addEventListener('click', () => {
-    paymentModal.style.display = 'none';
-  });
-
-  // Close modal when clicking outside
-  window.addEventListener('click', (e) => {
-    if (e.target === paymentModal) {
-      paymentModal.style.display = 'none';
-    }
-  });
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', initPaymentsDashboard);
-
-// Admin authentication check
-firebase.auth().onAuthStateChanged(user => {
-  if (!user || user.email !== "byamukamambabazimentor@gmail.com") {
-    window.location.href = "login.html";
-  }
-});
-</script>
+    </script>
 </body>
 </html>
