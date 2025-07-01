@@ -1010,5 +1010,48 @@ pendingBusinesses.forEach(business => {
             }
         });
     </script>
+
+   <script>
+async function updateUserPackagesFromBusinesses() {
+  setLoading(true);
+  try {
+    console.log("🔄 Syncing user packages from businesses...");
+    let updatedCount = 0;
+    let skippedCount = 0;
+
+    const businessesSnapshot = await db.collection("businesses").get();
+    for (const doc of businessesSnapshot.docs) {
+      const business = doc.data();
+      const userId = business.createdBy;
+      const businessPackage = business.package;
+
+      // Only if has createdBy and is NOT Starter
+      if (!userId || !businessPackage || businessPackage === "Starter") {
+        skippedCount++;
+        continue;
+      }
+
+      await db.collection("users").doc(userId).update({
+        package: businessPackage
+      });
+      updatedCount++;
+      console.log(`✅ Updated user ${userId} to package ${businessPackage}`);
+    }
+
+    alert(`✅ User packages synced!\nUpdated: ${updatedCount}\nSkipped: ${skippedCount}`);
+  } catch (error) {
+    console.error("❌ Error syncing user packages:", error);
+    alert(`❌ Error syncing user packages: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// Attach to your existing button:
+processBtn.addEventListener('click', async () => {
+  await processReferralEarnings();
+  await updateUserPackagesFromBusinesses();
+});
+</script>
 </body>
 </html>
